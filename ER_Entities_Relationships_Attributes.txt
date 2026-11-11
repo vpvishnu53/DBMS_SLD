@@ -1,0 +1,411 @@
+=====================================================================
+ LUMINA - SMART STREETLIGHT MANAGEMENT SYSTEM (SLMS)
+ Entity sets, relationship sets and attributes
+ Source: ER_Diagram-DBMS.png  +  the implemented website / Oracle schema
+=====================================================================
+
+LEGEND
+  (PK)        key attribute (underlined in the diagram)
+  (PPK)       partial key of a weak entity
+  [MV]        multivalued attribute (double oval)
+  [D]         derived attribute (dashed oval)
+  {a, b, c}   composite attribute and its components
+  1:N, M:N    cardinality, read left entity -> right entity
+
+
+#####################################################################
+ PART A - THE ER DIAGRAM
+#####################################################################
+
+SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
+
+---------------------------------------------------------------------
+ A1. ENTITY SETS AND THEIR ATTRIBUTES
+---------------------------------------------------------------------
+
+ 1. EMPLOYEE
+      emp_id (PK)
+      Name {first_name, middle_name, last_name}
+      date_of_birth
+      date_of_joining
+      role
+      aadhar_id
+      shift_type
+      salary
+      Address {street, city, state, pincode}
+      email [MV]
+      phone_number [MV]
+      age [D]                 (from date_of_birth)
+      work_experience [D]     (from date_of_joining)
+
+ 2. DEPARTMENT
+      dept_id (PK)
+      dept_name
+      dept_type
+
+ 3. HOMEPAGE   (the login / account entity)
+      username (PK)
+      password
+
+ 4. CIVILIAN
+      citizen_id (PK)
+      Name {first_name, middle_name, last_name}
+      Address {street, city, state, pincode}
+      email [MV]
+      phone_number [MV]
+
+ 5. COMPANY   (licensed contractor)
+      license_no (PK)
+      company_name
+      contractor_name
+      gst_no
+      class_rating
+      Address {street, city, state, pincode}
+      phone_no [MV]
+
+ 6. ZONE
+      zone_id (PK)
+      zone_name
+      city_region
+      emp_id                  (the supervising employee)
+
+ 7. FEEDER_PILLAR
+      cabinet_id (PK)
+      installation_date
+      operational_status
+      power_rating_kva
+
+ 8. STREETLIGHT
+      pole_id (PK)
+      current_status
+      lamp_type
+      wattage
+      dimming_support
+      location {latitude, longitude}
+      installation_date
+      last_serviced_date
+      age_years [D]           (from installation_date)
+
+ 9. SENSOR
+      sensor_id (PK)
+      sensor_type
+      manufacturer
+      status
+      last_reading_value
+      last_reading_time
+
+10. COMPLAINT
+      complaint_id (PK)
+      issue_category
+      description
+      ticket_status
+      reported_timestamp
+
+11. WORK_ORDER
+      work_order_id (PK)
+      work_type
+      status
+      resolution_notes
+      created_timestamp
+      completion_timestamp
+      resolution_hours [D]    (completion_timestamp - created_timestamp)
+
+12. SPARE_PARTS
+      part_id (PK)
+      part_name
+      unit_price
+      quantity_in_stock
+      total_cost [D]          (unit_price x quantity_in_stock)
+
+13. BILLING
+      billing_id (PK)
+      payment_id
+      payment_type
+      receipt_no
+      budget_sanctioned
+      actually_spent
+      billing_amount
+
+14. ENERGY_LOG   *** WEAK ENTITY *** (double rectangle)
+      log_number (PPK)        (identified together with its owner STREETLIGHT.pole_id)
+      reading_date
+      units_consumed
+      cost_inr
+
+
+---------------------------------------------------------------------
+ A2. RELATIONSHIP SETS
+---------------------------------------------------------------------
+ (The diagram draws no attributes on any relationship, except that the
+  implementation adds quantity_used to "uses" - see Part B.)
+
+  #  Relationship   Entities                          Cardinality
+ --  -------------  --------------------------------  ------------------
+  1  employs        DEPARTMENT - EMPLOYEE             1:N
+  2  logs_into      EMPLOYEE - HOMEPAGE               1:0..1
+  3  registers_on   CIVILIAN - HOMEPAGE               1:0..1
+  4  accesses       COMPANY - HOMEPAGE                1:0..1
+  5  supervises     EMPLOYEE - ZONE                   1:N
+  6  handles        EMPLOYEE - COMPLAINT              1:N
+  7  assigned_to    EMPLOYEE - WORK_ORDER             1:N
+  8  submits        CIVILIAN - COMPLAINT              1:N
+  9  executes       COMPANY - WORK_ORDER              1:N
+ 10  scheduled_in   ZONE - WORK_ORDER                 1:N
+ 11  contains       ZONE - FEEDER_PILLAR              1:N
+ 12  located_in     ZONE - STREETLIGHT                1:N
+ 13  deployed_in    ZONE - SENSOR                     1:N
+ 14  powers         FEEDER_PILLAR - STREETLIGHT       1:N
+ 15  has            STREETLIGHT - SENSOR              1:N
+ 16  receives       STREETLIGHT - COMPLAINT           1:N
+ 17  requires       STREETLIGHT - WORK_ORDER          1:N
+ 18  resolves       COMPLAINT - WORK_ORDER            1:N
+ 19  generates      WORK_ORDER - BILLING              1:0..1
+ 20  uses           WORK_ORDER - SPARE_PARTS          M:N
+ 21  records        STREETLIGHT - ENERGY_LOG          1:N   (identifying relationship
+                                                            of the weak entity)
+
+ Cardinalities are as implemented in the database, which is how the
+ diagram's crow's-foot / bar symbols were interpreted.
+
+
+#####################################################################
+ PART B - THE WEBSITE / ORACLE DATABASE (what was actually built)
+#####################################################################
+
+ The ER diagram is mapped to 20 Oracle tables in schema SLMS:
+   - 14 tables for the entity sets
+   - 5 tables for multivalued attributes
+   - 1 junction table for the M:N relationship "uses"
+
+ Mapping rules used:
+   * Composite attributes are flattened into plain columns
+       Name -> first_name, middle_name, last_name
+       Address -> street, city, state, pincode
+       location -> latitude, longitude
+   * Multivalued attributes get their own child table
+   * Derived attributes are NOT stored; they are computed in SQL views
+   * 1:N relationships become a foreign key on the "N" side
+   * "uses" (M:N) becomes the table WORK_ORDER_PART
+   * ENERGY_LOG's primary key is (pole_id, log_number)
+
+ Where each relationship lives in the tables:
+   employs       -> EMPLOYEE.dept_id
+   logs_into     -> HOMEPAGE.emp_id          (unique)
+   registers_on  -> HOMEPAGE.citizen_id      (unique)
+   accesses      -> HOMEPAGE.license_no      (unique)
+   supervises    -> ZONE.emp_id
+   handles       -> COMPLAINT.handled_by
+   assigned_to   -> WORK_ORDER.emp_id
+   submits       -> COMPLAINT.citizen_id
+   executes      -> WORK_ORDER.license_no
+   scheduled_in  -> WORK_ORDER.zone_id
+   contains      -> FEEDER_PILLAR.zone_id
+   located_in    -> STREETLIGHT.zone_id
+   deployed_in   -> SENSOR.zone_id
+   powers        -> STREETLIGHT.cabinet_id
+   has           -> SENSOR.pole_id
+   receives      -> COMPLAINT.pole_id
+   requires      -> WORK_ORDER.pole_id
+   resolves      -> WORK_ORDER.complaint_id
+   generates     -> BILLING.work_order_id    (unique)
+   uses          -> WORK_ORDER_PART (work_order_id, part_id, quantity_used)
+   records       -> ENERGY_LOG.pole_id       (part of its primary key)
+
+---------------------------------------------------------------------
+ B1. TABLES AND COLUMNS
+---------------------------------------------------------------------
+ Each column: name, Oracle type, then flags
+   PK = primary key   FK -> t.c = foreign key   UQ = unique   NN = NOT NULL
+
+ 1. BILLING
+      billing_id         NUMBER(8)     PK
+      work_order_id      NUMBER(8)     FK -> WORK_ORDER.work_order_id, UQ, NN
+      payment_id         VARCHAR2(40)
+      payment_type       VARCHAR2(20)  NN
+      receipt_no         VARCHAR2(30)  UQ
+      budget_sanctioned  NUMBER(12,2)  NN
+      actually_spent     NUMBER(12,2)  NN
+      billing_amount     NUMBER(12,2)  NN
+
+ 2. CIVILIAN
+      citizen_id   NUMBER(8)      PK
+      first_name   VARCHAR2(50)   NN
+      middle_name  VARCHAR2(50)
+      last_name    VARCHAR2(50)   NN
+      street       VARCHAR2(120)
+      city         VARCHAR2(60)
+      state        VARCHAR2(60)
+      pincode      CHAR(6)
+
+ 3. CIVILIAN_EMAIL
+      citizen_id  NUMBER(8)      PK, FK -> CIVILIAN.citizen_id
+      email       VARCHAR2(120)  PK, UQ
+      (composite primary key: citizen_id, email)
+
+ 4. CIVILIAN_PHONE
+      citizen_id    NUMBER(8)     PK, FK -> CIVILIAN.citizen_id
+      phone_number  VARCHAR2(15)  PK
+      (composite primary key: citizen_id, phone_number)
+
+ 5. COMPANY
+      license_no       VARCHAR2(20)   PK
+      company_name     VARCHAR2(120)  NN
+      contractor_name  VARCHAR2(100)  NN
+      gst_no           CHAR(15)       UQ, NN
+      class_rating     VARCHAR2(10)   NN
+      street           VARCHAR2(120)
+      city             VARCHAR2(60)
+      state            VARCHAR2(60)
+      pincode          CHAR(6)
+
+ 6. COMPANY_PHONE
+      license_no  VARCHAR2(20)  PK, FK -> COMPANY.license_no
+      phone_no    VARCHAR2(15)  PK
+      (composite primary key: license_no, phone_no)
+
+ 7. COMPLAINT
+      complaint_id        NUMBER(8)       PK
+      issue_category      VARCHAR2(20)    NN
+      description         VARCHAR2(1000)  NN
+      ticket_status       VARCHAR2(12)    NN
+      reported_timestamp  TIMESTAMP(6)    NN
+      citizen_id          NUMBER(8)       FK -> CIVILIAN.citizen_id, NN
+      pole_id             NUMBER(8)       FK -> STREETLIGHT.pole_id, NN
+      handled_by          NUMBER(8)       FK -> EMPLOYEE.emp_id
+
+ 8. DEPARTMENT
+      dept_id    NUMBER(6)      PK
+      dept_name  VARCHAR2(100)  UQ, NN
+      dept_type  VARCHAR2(30)   NN
+
+ 9. EMPLOYEE
+      emp_id           NUMBER(8)      PK
+      first_name       VARCHAR2(50)   NN
+      middle_name      VARCHAR2(50)
+      last_name        VARCHAR2(50)   NN
+      date_of_birth    DATE           NN
+      date_of_joining  DATE           NN
+      role             VARCHAR2(30)   NN
+      aadhar_id        CHAR(12)       UQ, NN
+      shift_type       VARCHAR2(12)   NN
+      salary           NUMBER(10,2)   NN
+      street           VARCHAR2(120)
+      city             VARCHAR2(60)
+      state            VARCHAR2(60)
+      pincode          CHAR(6)
+      dept_id          NUMBER(6)      FK -> DEPARTMENT.dept_id, NN
+
+10. EMPLOYEE_EMAIL
+      emp_id  NUMBER(8)      PK, FK -> EMPLOYEE.emp_id
+      email   VARCHAR2(120)  PK, UQ
+      (composite primary key: emp_id, email)
+
+11. EMPLOYEE_PHONE
+      emp_id        NUMBER(8)     PK, FK -> EMPLOYEE.emp_id
+      phone_number  VARCHAR2(15)  PK
+      (composite primary key: emp_id, phone_number)
+
+12. ENERGY_LOG
+      pole_id         NUMBER(8)     PK, FK -> STREETLIGHT.pole_id
+      log_number      NUMBER(6)     PK
+      reading_date    DATE          NN
+      units_consumed  NUMBER(10,3)  NN
+      cost_inr        NUMBER(10,2)  NN
+      (composite primary key: pole_id, log_number)
+      (unique together: pole_id, reading_date)
+
+13. FEEDER_PILLAR
+      cabinet_id          NUMBER(6)     PK
+      installation_date   DATE          NN
+      operational_status  VARCHAR2(20)  NN
+      power_rating_kva    NUMBER(6,2)   NN
+      zone_id             NUMBER(6)     FK -> ZONE.zone_id, NN
+
+14. HOMEPAGE
+      username       VARCHAR2(40)   PK
+      password       VARCHAR2(100)  NN
+      user_type      VARCHAR2(10)   NN
+      emp_id         NUMBER(8)      FK -> EMPLOYEE.emp_id, UQ
+      citizen_id     NUMBER(8)      FK -> CIVILIAN.citizen_id, UQ
+      license_no     VARCHAR2(20)   FK -> COMPANY.license_no, UQ
+      is_active      CHAR(1)        NN
+      created_at     TIMESTAMP(6)   NN
+      last_login_at  TIMESTAMP(6)
+
+15. SENSOR
+      sensor_id           NUMBER(8)     PK
+      sensor_type         VARCHAR2(20)  NN
+      manufacturer        VARCHAR2(80)
+      status              VARCHAR2(12)  NN
+      last_reading_value  NUMBER(10,3)
+      last_reading_time   TIMESTAMP(6)
+      zone_id             NUMBER(6)     FK -> ZONE.zone_id, NN
+      pole_id             NUMBER(8)     FK -> STREETLIGHT.pole_id, NN
+
+16. SPARE_PARTS
+      part_id            NUMBER(6)      PK
+      part_name          VARCHAR2(100)  UQ, NN
+      unit_price         NUMBER(10,2)   NN
+      quantity_in_stock  NUMBER(8)      NN
+
+17. STREETLIGHT
+      pole_id             NUMBER(8)     PK
+      current_status      VARCHAR2(20)  NN
+      lamp_type           VARCHAR2(20)  NN
+      wattage             NUMBER(5)     NN
+      dimming_support     CHAR(1)       NN
+      latitude            NUMBER(9,6)   NN
+      longitude           NUMBER(9,6)   NN
+      installation_date   DATE          NN
+      last_serviced_date  DATE
+      zone_id             NUMBER(6)     FK -> ZONE.zone_id, NN
+      cabinet_id          NUMBER(6)     FK -> FEEDER_PILLAR.cabinet_id, NN
+
+18. WORK_ORDER
+      work_order_id         NUMBER(8)       PK
+      work_type             VARCHAR2(20)    NN
+      status                VARCHAR2(12)    NN
+      resolution_notes      VARCHAR2(1000)
+      created_timestamp     TIMESTAMP(6)    NN
+      completion_timestamp  TIMESTAMP(6)
+      zone_id               NUMBER(6)       FK -> ZONE.zone_id, NN
+      pole_id               NUMBER(8)       FK -> STREETLIGHT.pole_id
+      complaint_id          NUMBER(8)       FK -> COMPLAINT.complaint_id
+      emp_id                NUMBER(8)       FK -> EMPLOYEE.emp_id
+      license_no            VARCHAR2(20)    FK -> COMPANY.license_no
+
+19. WORK_ORDER_PART
+      work_order_id  NUMBER(8)  PK, FK -> WORK_ORDER.work_order_id
+      part_id        NUMBER(6)  PK, FK -> SPARE_PARTS.part_id
+      quantity_used  NUMBER(6)  NN
+      (composite primary key: work_order_id, part_id)
+
+20. ZONE
+      zone_id      NUMBER(6)     PK
+      zone_name    VARCHAR2(80)  UQ, NN
+      city_region  VARCHAR2(80)  NN
+      emp_id       NUMBER(8)     FK -> EMPLOYEE.emp_id
+
+---------------------------------------------------------------------
+ B2. DERIVED ATTRIBUTES (computed in views, never stored)
+---------------------------------------------------------------------
+   age               V_EMPLOYEE      years since date_of_birth
+   work_experience   V_EMPLOYEE      years since date_of_joining
+   age_years         V_STREETLIGHT   years since installation_date
+   resolution_hours  V_WORK_ORDER    hours from created to completion
+   total_cost        V_SPARE_PARTS   unit_price x quantity_in_stock
+
+---------------------------------------------------------------------
+ B3. ATTRIBUTES THE WEBSITE ADDED BEYOND THE DIAGRAM
+---------------------------------------------------------------------
+   HOMEPAGE.user_type        which kind of account: EMPLOYEE / CIVILIAN / COMPANY
+   HOMEPAGE.emp_id           links the login to exactly one employee,
+   HOMEPAGE.citizen_id       citizen or company (a CHECK allows only one)
+   HOMEPAGE.license_no
+   HOMEPAGE.is_active        lets an admin disable a login
+   HOMEPAGE.created_at       account creation time
+   HOMEPAGE.last_login_at    last successful sign-in
+   WORK_ORDER_PART.quantity_used   how many of a part a work order used
+   SENSOR.pole_id            sensor mounted on a pole (relationship "has")
+   Foreign-key columns that implement the relationships (see list above).
+   Child tables for the multivalued attributes (EMPLOYEE_EMAIL, etc.).

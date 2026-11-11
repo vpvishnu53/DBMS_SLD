@@ -65,7 +65,7 @@ cd backend && npm run test:smoke
 
 | ER construct | Implementation |
 |---|---|
-| Strong entities (14) | One table each, with surrogate keys from **sequences + BEFORE INSERT triggers** (11g has no IDENTITY) |
+| Strong entities (13) + weak entity ENERGY_LOG | One table each, with surrogate keys from **sequences + BEFORE INSERT triggers** (11g has no IDENTITY) |
 | Composite attrs: Name, Address, Location | Flattened to columns (`first_name`…, `street/city/state/pincode`, `latitude/longitude`) |
 | Multivalued attrs: email, phone_number, phone_no | Child tables `EMPLOYEE_EMAIL`, `EMPLOYEE_PHONE`, `CIVILIAN_EMAIL`, `CIVILIAN_PHONE`, `COMPANY_PHONE` |
 | Derived attrs: age, work_experience, age_years, resolution_hours, total_cost | Computed in views `V_EMPLOYEE`, `V_STREETLIGHT`, `V_WORK_ORDER`, `V_SPARE_PARTS` (11g virtual columns can't use SYSDATE) |
