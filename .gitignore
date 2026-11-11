@@ -1,0 +1,13 @@
+# dependencies & builds
+node_modules/
+.next/
+
+# local secrets (copy backend/.env.example -> backend/.env)
+.env
+.env.local
+
+# OS / local shortcuts
+*.lnk
+Thumbs.db
+.DS_Store
+*.log

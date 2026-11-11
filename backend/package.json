@@ -1,0 +1,32 @@
+{
+  "name": "slms-backend",
+  "version": "1.0.0",
+  "description": "Smart Streetlight Management System - REST API (Node.js + Express + Oracle 11g)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon --watch src src/server.js",
+    "db:ping": "node scripts/ping-db.js",
+    "db:setup": "powershell -ExecutionPolicy Bypass -File ../database/setup.ps1",
+    "test:smoke": "node scripts/smoke.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.12.1",
+    "oracledb": "^6.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
