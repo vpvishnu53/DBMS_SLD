@@ -23,7 +23,7 @@ function check(name, cond, extra) {
   else { fail++; console.log(`  \x1b[31m✗ ${name}\x1b[0m`, extra !== undefined ? JSON.stringify(extra).slice(0, 300) : ''); }
 }
 
-const login = async (u) => (await call('POST', '/auth/login', { body: { username: u, password: 'Password@123' } })).data?.token;
+const login = async (u, p = 'Password@123') => (await call('POST', '/auth/login', { body: { username: u, password: p } })).data?.token;
 
 (async () => {
   console.log(`Smoke testing ${API}\n`);
@@ -70,7 +70,7 @@ const login = async (u) => (await call('POST', '/auth/login', { body: { username
   check('enum violation -> 400', v1.status === 400 && /lamp_type/.test(v1.data.error), v1.data);
   const v2 = await call('POST', '/streetlights', { token: admin, body: { lamp_type: 'LED', wattage: 90, latitude: 12.9, longitude: 77.6, installation_date: '2024-01-01', zone_id: 1, cabinet_id: 103 } });
   check('trigger: feeder in wrong zone -> 400 ORA-20003', v2.status === 400 && /zone/.test(v2.data.error), v2.data);
-  const v3 = await call('POST', '/employees', { token: admin, body: { first_name: 'Kid', last_name: 'X', date_of_birth: '2015-01-01', date_of_joining: '2025-01-01', role: 'TECHNICIAN', aadhar_id: '299999999999', salary: 1000, dept_id: 30 } });
+  const v3 = await call('POST', '/employees', { token: admin, body: { first_name: 'Kid', last_name: 'X', date_of_birth: '2015-01-01', date_of_joining: '2025-01-01', role: 'TECHNICIAN', aadhar_id: '299999999999', salary: 1000, dept_id: 30, username: 'smoke.kid', password: 'Password123' } });
   check('trigger: employee under 18 -> 400', v3.status === 400 && /18/.test(v3.data.error), v3.data);
   const v4 = await call('DELETE', '/zones/1', { token: admin });
   check('delete referenced zone -> 409', v4.status === 409, v4.data);
@@ -78,24 +78,46 @@ const login = async (u) => (await call('POST', '/auth/login', { body: { username
   console.log('\nCRUD round-trip (multivalued attrs)');
   const c = await call('POST', '/companies', { token: admin, body: {
     license_no: 'KA-EL-TEST-0001', company_name: 'Smoke Test Electricals', contractor_name: 'Tester',
-    gst_no: '29AAAAA0000A1Z5', class_rating: 'CLASS_IV', city: 'Bengaluru', phones: ['+919000000001', '+919000000002'] } });
-  check('create company with 2 phones', c.status === 201 && c.data.phones?.length === 2, c.data);
+    gst_no: '29AAAAA0000A1Z5', class_rating: 'CLASS_IV', city: 'Bengaluru', phones: ['+919000000001', '+919000000002'],
+    username: 'smoke.company', password: 'Password123' } });
+  check('create company with 2 phones + its login', c.status === 201 && c.data.phones?.length === 2 && c.data.username === 'smoke.company', c.data);
+  check('new company can sign in', !!(await login('smoke.company', 'Password123')));
   const cu = await call('PUT', '/companies/KA-EL-TEST-0001', { token: admin, body: { class_rating: 'CLASS_III', phones: ['+919000000003'] } });
   check('update company + replace phones', cu.data?.class_rating === 'CLASS_III' && cu.data.phones.length === 1, cu.data);
-  const dup = await call('POST', '/companies', { token: admin, body: { ...c.data, phones: [] } });
+  const dup = await call('POST', '/companies', { token: admin, body: { ...c.data, username: 'smoke.company2', password: 'Password123', phones: [] } });
   check('duplicate PK -> 409 friendly', dup.status === 409 && /licence/.test(dup.data.error), dup.data);
   check('delete company', (await call('DELETE', '/companies/KA-EL-TEST-0001', { token: admin })).status === 200);
+  check('deleting the company deleted its login', !(await login('smoke.company', 'Password123')));
+  check('failed duplicate left no orphan login', !(await login('smoke.company2', 'Password123')));
+
+  console.log('\nER participation rules (from the diagram)');
+  const z = await call('POST', '/zones', { token: admin, body: { zone_name: 'Smoke Zone', city_region: 'Test' } });
+  check('zone without supervisor -> 400 (supervises ||)', z.status === 400 && /emp_id/.test(z.data.error), z.data);
+  const noLogin = await call('POST', '/employees', { token: admin, body: { first_name: 'No', last_name: 'Login', date_of_birth: '1990-01-01', role: 'TECHNICIAN', aadhar_id: '299999999998', salary: 30000, dept_id: 30 } });
+  check('employee without login -> 400 (logs_into ||)', noLogin.status === 400 && /Username/.test(noLogin.data.error), noLogin.data);
+  const newEmp = await call('POST', '/employees', { token: admin, body: { first_name: 'Smoke', last_name: 'Tech', date_of_birth: '1990-01-01', role: 'TECHNICIAN', aadhar_id: '299999999997', salary: 30000, dept_id: 30, username: 'smoke.tech', password: 'Password123' } });
+  check('employee + login created together', newEmp.status === 201 && newEmp.data.username === 'smoke.tech', newEmp.data);
+  check('new employee can sign in', !!(await login('smoke.tech', 'Password123')));
+  check('delete employee', (await call('DELETE', `/employees/${newEmp.data.emp_id}`, { token: admin })).status === 200);
+  check('deleting the employee deleted its login', !(await login('smoke.tech', 'Password123')));
+  check('cannot delete your own employee record', (await call('DELETE', '/employees/1001', { token: admin })).status === 400);
 
   console.log('\ncitizen -> complaint -> work order -> parts -> completion (trigger cascade)');
   const pole = 10002;
   const cmp = await call('POST', '/portal/citizen/complaints', { token: citizen, body: { pole_id: pole, issue_category: 'LIGHT_OUT', description: 'Smoke test: lamp not glowing at night' } });
   check('citizen files complaint', cmp.status === 201, cmp.data);
+  const citizen2 = await login('fatima.sheikh');
+  const cmp2 = await call('POST', '/portal/citizen/complaints', { token: citizen2, body: { pole_id: pole, issue_category: 'LIGHT_OUT', description: 'Smoke test: same pole, second citizen' } });
+  check('second citizen reports the same pole', cmp2.status === 201, cmp2.data);
   const light1 = await call('GET', `/streetlights/${pole}`, { token: admin });
   check('trigger flipped light to FAULTY', light1.data?.current_status === 'FAULTY', light1.data);
   const wo = await call('POST', `/complaints/${cmp.data.complaint_id}/work-order`, { token: admin, body: { emp_id: 1006, license_no: 'KA-EL-2019-0457', work_type: 'REPAIR' } });
   check('sp_complaint_to_work_order creates ASSIGNED WO', wo.status === 201 && wo.data.status === 'ASSIGNED', wo.data);
-  const again = await call('POST', `/complaints/${cmp.data.complaint_id}/work-order`, { token: admin, body: {} });
-  check('second open WO for same complaint -> 400', again.status === 400, again.data);
+  check('one work order resolves both complaints (resolves 1:N)', wo.data?.linked_complaints === 2 && wo.data.complaints_resolved === 2, wo.data);
+  const noEmp = await call('POST', `/complaints/${cmp2.data.complaint_id}/work-order`, { token: admin, body: {} });
+  check('dispatch without employee -> 400 (assigned_to ||)', noEmp.status === 400 && /emp_id/.test(noEmp.data.error), noEmp.data);
+  const again = await call('POST', `/complaints/${cmp.data.complaint_id}/work-order`, { token: admin, body: { emp_id: 1006 } });
+  check('complaint already linked -> 400', again.status === 400 && /already linked/.test(again.data.error), again.data);
   const stockBefore = (await call('GET', '/spare-parts/505', { token: admin })).data.quantity_in_stock;
   const parts = await call('POST', `/work-orders/${wo.data.work_order_id}/parts`, { token: tech, body: { part_id: 505, quantity_used: 2 } });
   const stockAfter = (await call('GET', '/spare-parts/505', { token: admin })).data.quantity_in_stock;
@@ -113,6 +135,8 @@ const login = async (u) => (await call('POST', '/auth/login', { body: { username
   check('trigger restored light to FUNCTIONAL', light2.data?.current_status === 'FUNCTIONAL', light2.data);
   const mine = await call('GET', '/portal/citizen/complaints', { token: citizen });
   check('citizen sees complaint RESOLVED', mine.data?.find((x) => x.complaint_id === cmp.data.complaint_id)?.ticket_status === 'RESOLVED');
+  const mine2 = await call('GET', '/portal/citizen/complaints', { token: citizen2 });
+  check('second citizen complaint RESOLVED by the same job', mine2.data?.find((x) => x.complaint_id === cmp2.data.complaint_id)?.ticket_status === 'RESOLVED');
 
   console.log('\nenergy log (weak entity via sp_record_energy)');
   const el = await call('POST', '/energy-logs', { token: tech, body: { pole_id: pole, reading_date: '2030-01-31', units_consumed: 30 } });
@@ -120,6 +144,6 @@ const login = async (u) => (await call('POST', '/auth/login', { body: { username
   check('delete energy log', (await call('DELETE', `/energy-logs/${pole}/7`, { token: tech })).status === 200);
 
   console.log(`\n${pass} passed, ${fail} failed`);
-  console.log('note: the smoke complaint/work order are kept as history (they reference real rows).');
+  console.log('note: the smoke complaints/work order are kept as history; reseed to reset.');
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

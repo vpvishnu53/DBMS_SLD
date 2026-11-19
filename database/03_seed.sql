@@ -22,31 +22,61 @@ INSERT INTO department (dept_name, dept_type) VALUES ('IT & Smart Systems',     
 -- dept_id 60
 INSERT INTO department (dept_name, dept_type) VALUES ('Citizen Services',        'CUSTOMER_SERVICE');
 
+-- ---------- login accounts (HOMEPAGE) : password = Password@123 ----------
+-- logs_into / registers_on / accesses are 1:1 with TOTAL participation, so every
+-- employee, civilian and company row below references exactly one of these logins.
+INSERT INTO homepage (username, password, user_type) VALUES ('admin',           '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('karthik.menon',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('priya.nair',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('rahul.gowda',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('deepa.k',         '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('suresh.kumar',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('m.irfan',         '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('lakshmi.hegde',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('vikram.shetty',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('sneha.k',         '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('arjun.reddy',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('meera.iyer',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('rohan.desai',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('fatima.sheikh',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('aditya.bhat',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('kavya.shenoy',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('naveen.prasad',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('pooja.ramesh',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('thomas.george',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('divya.joshi',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('harish.rao',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('anjali.verma',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
+INSERT INTO homepage (username, password, user_type) VALUES ('lumen',           '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
+INSERT INTO homepage (username, password, user_type) VALUES ('brightpath',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
+INSERT INTO homepage (username, password, user_type) VALUES ('deccanpower',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
+INSERT INTO homepage (username, password, user_type) VALUES ('nammalights',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
+
 -- ---------- employees (1001..1012) ----------
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Ananya', NULL, 'Rao', DATE '1984-03-12', DATE '2012-06-01', 'ADMIN', '234567890123', 'MORNING', 145000, '12 MG Road', 'Bengaluru', 'Karnataka', '560001', 10);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Karthik', 'S', 'Menon', DATE '1988-07-21', DATE '2015-01-15', 'ZONE_SUPERVISOR', '345678901234', 'MORNING', 92000, '4th Block, 80 Ft Rd', 'Bengaluru', 'Karnataka', '560034', 20);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Priya', NULL, 'Nair', DATE '1990-11-02', DATE '2016-08-10', 'ZONE_SUPERVISOR', '456789012345', 'EVENING', 89000, '100 Ft Road', 'Bengaluru', 'Karnataka', '560038', 20);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Rahul', NULL, 'Gowda', DATE '1986-01-30', DATE '2014-04-01', 'ZONE_SUPERVISOR', '567890123456', 'ROTATIONAL', 95000, '9th Block', 'Bengaluru', 'Karnataka', '560069', 20);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Deepa', NULL, 'Krishnan', DATE '1991-05-17', DATE '2018-02-19', 'ENGINEER', '678901234567', 'MORNING', 78000, 'ITPL Main Rd', 'Bengaluru', 'Karnataka', '560066', 30);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Suresh', NULL, 'Kumar', DATE '1993-09-09', DATE '2019-07-01', 'TECHNICIAN', '789012345678', 'NIGHT', 42000, 'Sampige Road', 'Bengaluru', 'Karnataka', '560003', 30);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Mohammed', NULL, 'Irfan', DATE '1995-12-25', DATE '2020-03-16', 'TECHNICIAN', '890123456789', 'EVENING', 40000, 'Hosur Road', 'Bengaluru', 'Karnataka', '560100', 30);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Lakshmi', 'B', 'Hegde', DATE '1994-04-14', DATE '2021-01-04', 'TECHNICIAN', '901234567890', 'NIGHT', 39000, 'CMH Road', 'Bengaluru', 'Karnataka', '560038', 30);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Vikram', NULL, 'Shetty', DATE '1987-08-08', DATE '2013-11-11', 'ACCOUNTANT', '298765432109', 'MORNING', 70000, 'Residency Road', 'Bengaluru', 'Karnataka', '560025', 40);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Sneha', NULL, 'Kulkarni', DATE '1997-02-27', DATE '2022-06-20', 'SUPPORT_AGENT', '387654321098', 'MORNING', 34000, 'Basavanagudi', 'Bengaluru', 'Karnataka', '560004', 60);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Arjun', NULL, 'Reddy', DATE '1992-10-05', DATE '2017-09-25', 'ENGINEER', '476543210987', 'ROTATIONAL', 85000, 'Outer Ring Road', 'Bengaluru', 'Karnataka', '560103', 50);
-INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id)
-VALUES ('Meera', NULL, 'Iyer', DATE '1998-06-30', DATE '2023-03-01', 'SUPPORT_AGENT', '565432109876', 'EVENING', 32000, 'Malleshwaram 8th Cross', 'Bengaluru', 'Karnataka', '560003', 60);
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Ananya', NULL, 'Rao', DATE '1984-03-12', DATE '2012-06-01', 'ADMIN', '234567890123', 'MORNING', 145000, '12 MG Road', 'Bengaluru', 'Karnataka', '560001', 10, 'admin');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Karthik', 'S', 'Menon', DATE '1988-07-21', DATE '2015-01-15', 'ZONE_SUPERVISOR', '345678901234', 'MORNING', 92000, '4th Block, 80 Ft Rd', 'Bengaluru', 'Karnataka', '560034', 20, 'karthik.menon');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Priya', NULL, 'Nair', DATE '1990-11-02', DATE '2016-08-10', 'ZONE_SUPERVISOR', '456789012345', 'EVENING', 89000, '100 Ft Road', 'Bengaluru', 'Karnataka', '560038', 20, 'priya.nair');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Rahul', NULL, 'Gowda', DATE '1986-01-30', DATE '2014-04-01', 'ZONE_SUPERVISOR', '567890123456', 'ROTATIONAL', 95000, '9th Block', 'Bengaluru', 'Karnataka', '560069', 20, 'rahul.gowda');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Deepa', NULL, 'Krishnan', DATE '1991-05-17', DATE '2018-02-19', 'ENGINEER', '678901234567', 'MORNING', 78000, 'ITPL Main Rd', 'Bengaluru', 'Karnataka', '560066', 30, 'deepa.k');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Suresh', NULL, 'Kumar', DATE '1993-09-09', DATE '2019-07-01', 'TECHNICIAN', '789012345678', 'NIGHT', 42000, 'Sampige Road', 'Bengaluru', 'Karnataka', '560003', 30, 'suresh.kumar');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Mohammed', NULL, 'Irfan', DATE '1995-12-25', DATE '2020-03-16', 'TECHNICIAN', '890123456789', 'EVENING', 40000, 'Hosur Road', 'Bengaluru', 'Karnataka', '560100', 30, 'm.irfan');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Lakshmi', 'B', 'Hegde', DATE '1994-04-14', DATE '2021-01-04', 'TECHNICIAN', '901234567890', 'NIGHT', 39000, 'CMH Road', 'Bengaluru', 'Karnataka', '560038', 30, 'lakshmi.hegde');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Vikram', NULL, 'Shetty', DATE '1987-08-08', DATE '2013-11-11', 'ACCOUNTANT', '298765432109', 'MORNING', 70000, 'Residency Road', 'Bengaluru', 'Karnataka', '560025', 40, 'vikram.shetty');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Sneha', NULL, 'Kulkarni', DATE '1997-02-27', DATE '2022-06-20', 'SUPPORT_AGENT', '387654321098', 'MORNING', 34000, 'Basavanagudi', 'Bengaluru', 'Karnataka', '560004', 60, 'sneha.k');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Arjun', NULL, 'Reddy', DATE '1992-10-05', DATE '2017-09-25', 'ENGINEER', '476543210987', 'ROTATIONAL', 85000, 'Outer Ring Road', 'Bengaluru', 'Karnataka', '560103', 50, 'arjun.reddy');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Meera', NULL, 'Iyer', DATE '1998-06-30', DATE '2023-03-01', 'SUPPORT_AGENT', '565432109876', 'EVENING', 32000, 'Malleshwaram 8th Cross', 'Bengaluru', 'Karnataka', '560003', 60, 'meera.iyer');
 
 INSERT INTO employee_email VALUES (1001, 'ananya.rao@slms.gov.in');
 INSERT INTO employee_email VALUES (1001, 'ananya.r84@gmail.com');
@@ -77,16 +107,16 @@ INSERT INTO employee_phone VALUES (1011, '+919986123450');
 INSERT INTO employee_phone VALUES (1012, '+917760234561');
 
 -- ---------- civilians (5001..5010) ----------
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Rohan', NULL, 'Desai', '5th Cross, Koramangala 6th Block', 'Bengaluru', 'Karnataka', '560095');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Fatima', NULL, 'Sheikh', '12th Main, HAL 2nd Stage', 'Bengaluru', 'Karnataka', '560038');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Aditya', 'K', 'Bhat', '30th Cross, Jayanagar 4th T Block', 'Bengaluru', 'Karnataka', '560041');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Kavya', NULL, 'Shenoy', 'Hope Farm Junction', 'Bengaluru', 'Karnataka', '560066');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Naveen', NULL, 'Prasad', '15th Cross, Malleshwaram', 'Bengaluru', 'Karnataka', '560003');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Pooja', NULL, 'Ramesh', 'Neeladri Nagar, Electronic City Ph 1', 'Bengaluru', 'Karnataka', '560100');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Thomas', NULL, 'George', '1st Block, Koramangala', 'Bengaluru', 'Karnataka', '560034');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Divya', NULL, 'Joshi', 'Defence Colony, Indiranagar', 'Bengaluru', 'Karnataka', '560038');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Harish', NULL, 'Rao', 'South End Circle', 'Bengaluru', 'Karnataka', '560011');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode) VALUES ('Anjali', 'M', 'Verma', 'Brookefield Main Rd', 'Bengaluru', 'Karnataka', '560066');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Rohan', NULL, 'Desai', '5th Cross, Koramangala 6th Block', 'Bengaluru', 'Karnataka', '560095', 'rohan.desai');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Fatima', NULL, 'Sheikh', '12th Main, HAL 2nd Stage', 'Bengaluru', 'Karnataka', '560038', 'fatima.sheikh');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Aditya', 'K', 'Bhat', '30th Cross, Jayanagar 4th T Block', 'Bengaluru', 'Karnataka', '560041', 'aditya.bhat');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Kavya', NULL, 'Shenoy', 'Hope Farm Junction', 'Bengaluru', 'Karnataka', '560066', 'kavya.shenoy');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Naveen', NULL, 'Prasad', '15th Cross, Malleshwaram', 'Bengaluru', 'Karnataka', '560003', 'naveen.prasad');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Pooja', NULL, 'Ramesh', 'Neeladri Nagar, Electronic City Ph 1', 'Bengaluru', 'Karnataka', '560100', 'pooja.ramesh');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Thomas', NULL, 'George', '1st Block, Koramangala', 'Bengaluru', 'Karnataka', '560034', 'thomas.george');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Divya', NULL, 'Joshi', 'Defence Colony, Indiranagar', 'Bengaluru', 'Karnataka', '560038', 'divya.joshi');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Harish', NULL, 'Rao', 'South End Circle', 'Bengaluru', 'Karnataka', '560011', 'harish.rao');
+INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Anjali', 'M', 'Verma', 'Brookefield Main Rd', 'Bengaluru', 'Karnataka', '560066', 'anjali.verma');
 
 INSERT INTO civilian_email VALUES (5001, 'rohan.desai@gmail.com');
 INSERT INTO civilian_email VALUES (5002, 'fatima.sheikh@outlook.com');
@@ -112,10 +142,10 @@ INSERT INTO civilian_phone VALUES (5009, '+919876500009');
 INSERT INTO civilian_phone VALUES (5010, '+919876500010');
 
 -- ---------- contractor companies ----------
-INSERT INTO company VALUES ('KA-EL-2019-0457', 'Lumen Infra Services Pvt Ltd', 'Ravi Shankar',  '29AABCL4571K1Z3', 'CLASS_I',   'Peenya Industrial Area', 'Bengaluru', 'Karnataka', '560058');
-INSERT INTO company VALUES ('KA-EL-2020-1123', 'BrightPath Electricals',       'Nandini Murthy','29AADFB1123M1Z8', 'CLASS_II',  'Bommasandra Ind. Area',  'Bengaluru', 'Karnataka', '560099');
-INSERT INTO company VALUES ('KA-EL-2018-0789', 'Deccan Power Solutions LLP',   'Imran Pasha',   '29AAKFD0789P1ZQ', 'CLASS_I',   'Rajajinagar',            'Bengaluru', 'Karnataka', '560010');
-INSERT INTO company VALUES ('KA-EL-2022-2045', 'Namma Lights Contractors',     'Gopal Swamy',   '29ABNPN2045R1Z1', 'CLASS_III', 'Yeshwanthpur',           'Bengaluru', 'Karnataka', '560022');
+INSERT INTO company VALUES ('KA-EL-2019-0457', 'Lumen Infra Services Pvt Ltd', 'Ravi Shankar',  '29AABCL4571K1Z3', 'CLASS_I',   'Peenya Industrial Area', 'Bengaluru', 'Karnataka', '560058', 'lumen');
+INSERT INTO company VALUES ('KA-EL-2020-1123', 'BrightPath Electricals',       'Nandini Murthy','29AADFB1123M1Z8', 'CLASS_II',  'Bommasandra Ind. Area',  'Bengaluru', 'Karnataka', '560099', 'brightpath');
+INSERT INTO company VALUES ('KA-EL-2018-0789', 'Deccan Power Solutions LLP',   'Imran Pasha',   '29AAKFD0789P1ZQ', 'CLASS_I',   'Rajajinagar',            'Bengaluru', 'Karnataka', '560010', 'deccanpower');
+INSERT INTO company VALUES ('KA-EL-2022-2045', 'Namma Lights Contractors',     'Gopal Swamy',   '29ABNPN2045R1Z1', 'CLASS_III', 'Yeshwanthpur',           'Bengaluru', 'Karnataka', '560022', 'nammalights');
 INSERT INTO company_phone VALUES ('KA-EL-2019-0457', '+918028391100');
 INSERT INTO company_phone VALUES ('KA-EL-2019-0457', '+919845991100');
 INSERT INTO company_phone VALUES ('KA-EL-2020-1123', '+918027832200');
@@ -220,7 +250,7 @@ UPDATE streetlight SET current_status = 'FAULTY'         WHERE pole_id IN (10020
 UPDATE streetlight SET current_status = 'DECOMMISSIONED' WHERE pole_id = 10048;
 UPDATE feeder_pillar SET operational_status = 'MAINTENANCE' WHERE cabinet_id = 110;
 
--- ---------- complaints (90001..90014) -- trigger flips light to FAULTY ----------
+-- ---------- complaints (90001..90015) -- trigger flips light to FAULTY ----------
 INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('LIGHT_OUT',      'Light completely off near the bakery for 3 nights.',            SYSTIMESTAMP - NUMTODSINTERVAL(40, 'DAY'), 5001, 10003, 1010);
 INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('FLICKERING',     'Lamp flickers continuously after 9 PM.',                         SYSTIMESTAMP - NUMTODSINTERVAL(35, 'DAY'), 5002, 10011, 1010);
 INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('DAMAGED_POLE',   'Pole tilted after a truck hit it, looks unsafe.',                SYSTIMESTAMP - NUMTODSINTERVAL(30, 'DAY'), 5003, 10019, 1012);
@@ -233,36 +263,51 @@ INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_
 INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('LIGHT_OUT',      'Dark corner near the park gate.',                                SYSTIMESTAMP - NUMTODSINTERVAL(2, 'DAY'),  5010, 10030, NULL);
 INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('FLICKERING',     'Flickering on and off every few seconds.',                       SYSTIMESTAMP - NUMTODSINTERVAL(1, 'DAY'),  5001, 10038, NULL);
 INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('DAMAGED_POLE',   'Lamp head cover broken, glass on the footpath.',                 SYSTIMESTAMP - NUMTODSINTERVAL(1, 'DAY'),  5002, 10046, NULL);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('OTHER',          'Please install a new light on our lane (no pole here).',        SYSTIMESTAMP - NUMTODSINTERVAL(10, 'DAY'), 5003, 10008, 1012);
+INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('OTHER',          'Please install a new light on our lane (no pole here).',        SYSTIMESTAMP - NUMTODSINTERVAL(10, 'DAY'), 5003, NULL,  1012);
 INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('LIGHT_OUT',      'Light out outside apartment block B.',                           SYSTIMESTAMP - NUMTODSINTERVAL(50, 'DAY'), 5004, 10016, 1010);
+INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('FLICKERING',     'Same pole as an earlier report - still flickering badly.',        SYSTIMESTAMP - NUMTODSINTERVAL(4, 'DAY'),  5008, 10005, 1012);
 
--- ---------- work orders (30001..30013) -- triggers cascade to lights & complaints ----------
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPAIR', 'COMPLETED', 'Replaced failed LED driver; tested OK.', SYSTIMESTAMP - NUMTODSINTERVAL(40, 'DAY') + NUMTODSINTERVAL(3, 'HOUR'), SYSTIMESTAMP - NUMTODSINTERVAL(39, 'DAY'), 10003, 90001, 1006, NULL);
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPAIR', 'COMPLETED', 'Loose neutral at terminal block fixed, photocell replaced.', SYSTIMESTAMP - NUMTODSINTERVAL(35, 'DAY') + NUMTODSINTERVAL(5, 'HOUR'), SYSTIMESTAMP - NUMTODSINTERVAL(33, 'DAY'), 10011, 90002, 1007, 'KA-EL-2020-1123');
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPLACEMENT', 'COMPLETED', 'Pole replaced with new 9m GI pole and LED fixture.', SYSTIMESTAMP - NUMTODSINTERVAL(30, 'DAY') + NUMTODSINTERVAL(2, 'HOUR'), SYSTIMESTAMP - NUMTODSINTERVAL(26, 'DAY'), 10019, 90003, 1005, 'KA-EL-2019-0457');
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPAIR', 'COMPLETED', 'Junction box sealed, cable re-terminated, SPD installed.', SYSTIMESTAMP - NUMTODSINTERVAL(25, 'DAY') + NUMTODSINTERVAL(1, 'HOUR'), SYSTIMESTAMP - NUMTODSINTERVAL(25, 'DAY') + NUMTODSINTERVAL(9, 'HOUR'), 10027, 90004, 1008, 'KA-EL-2018-0789');
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPAIR', 'COMPLETED', 'Faulty photocell swapped.', SYSTIMESTAMP - NUMTODSINTERVAL(20, 'DAY') + NUMTODSINTERVAL(6, 'HOUR'), SYSTIMESTAMP - NUMTODSINTERVAL(19, 'DAY'), 10035, 90005, 1006, NULL);
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPLACEMENT', 'COMPLETED', 'Sodium lamp + ballast replaced with LED retrofit.', SYSTIMESTAMP - NUMTODSINTERVAL(15, 'DAY') + NUMTODSINTERVAL(4, 'HOUR'), SYSTIMESTAMP - NUMTODSINTERVAL(13, 'DAY'), 10043, 90006, 1007, 'KA-EL-2019-0457');
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPAIR', 'IN_PROGRESS', 'Driver ordered, awaiting install.', SYSTIMESTAMP - NUMTODSINTERVAL(5, 'DAY'), 10005, 90007, 1006, NULL);
-INSERT INTO work_order (work_type, status, created_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPAIR', 'ASSIGNED', SYSTIMESTAMP - NUMTODSINTERVAL(4, 'DAY'), 10014, 90008, 1008, NULL);
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPAIR', 'IN_PROGRESS', 'Area cordoned off; cable fault being traced.', SYSTIMESTAMP - NUMTODSINTERVAL(3, 'DAY') + NUMTODSINTERVAL(2, 'HOUR'), 10022, 90009, 1005, 'KA-EL-2018-0789');
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, pole_id, complaint_id, emp_id, license_no)
-VALUES ('REPAIR', 'COMPLETED', 'MCB tripped repeatedly; replaced MCB.', SYSTIMESTAMP - NUMTODSINTERVAL(50, 'DAY') + NUMTODSINTERVAL(2, 'HOUR'), SYSTIMESTAMP - NUMTODSINTERVAL(49, 'DAY'), 10016, 90014, 1006, NULL);
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, zone_id, emp_id, license_no)
-VALUES ('PREVENTIVE', 'COMPLETED', 'Quarterly cleaning and IR inspection of Whitefield feeders.', SYSTIMESTAMP - NUMTODSINTERVAL(60, 'DAY'), SYSTIMESTAMP - NUMTODSINTERVAL(57, 'DAY'), 4, 1005, 'KA-EL-2022-2045');
-INSERT INTO work_order (work_type, status, created_timestamp, zone_id, emp_id)
-VALUES ('INSPECTION', 'PENDING', SYSTIMESTAMP - NUMTODSINTERVAL(1, 'DAY'), 6, NULL);
-INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, completion_timestamp, pole_id, emp_id, license_no)
-VALUES ('UPGRADE', 'COMPLETED', 'Smart dimming controller retrofitted.', SYSTIMESTAMP - NUMTODSINTERVAL(70, 'DAY'), SYSTIMESTAMP - NUMTODSINTERVAL(68, 'DAY'), 10001, 1011, 'KA-EL-2019-0457');
+-- ---------- work orders (30001..30013) ----------
+-- resolves is 1:N (one work order -> many complaints), stored as COMPLAINT.work_order_id.
+-- Each job is created as ASSIGNED, its complaint(s) are linked, then it is moved to
+-- its final status so the triggers cascade to lights and tickets as in real use.
+DECLARE
+  v_id NUMBER;
+  FUNCTION ago(p_days NUMBER, p_hours NUMBER DEFAULT 0) RETURN TIMESTAMP IS
+  BEGIN
+    RETURN SYSTIMESTAMP - NUMTODSINTERVAL(p_days, 'DAY') + NUMTODSINTERVAL(p_hours, 'HOUR');
+  END;
+  PROCEDURE wo(p_type VARCHAR2, p_status VARCHAR2, p_notes VARCHAR2, p_created TIMESTAMP, p_done TIMESTAMP,
+               p_pole NUMBER, p_zone NUMBER, p_emp NUMBER, p_lic VARCHAR2, p_complaints VARCHAR2 DEFAULT NULL) IS
+  BEGIN
+    INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, zone_id, pole_id, emp_id, license_no)
+    VALUES (p_type, 'ASSIGNED', p_notes, p_created, p_zone, p_pole, p_emp, p_lic)
+    RETURNING work_order_id INTO v_id;
+    IF p_complaints IS NOT NULL THEN
+      UPDATE complaint SET work_order_id = v_id
+       WHERE INSTR(',' || p_complaints || ',', ',' || complaint_id || ',') > 0;
+    END IF;
+    IF p_status <> 'ASSIGNED' THEN
+      UPDATE work_order SET status = p_status, completion_timestamp = p_done WHERE work_order_id = v_id;
+    END IF;
+  END;
+BEGIN
+  --   type           status         notes                                                          created       completed   pole   zone  emp   company             complaints
+  wo('REPAIR',      'COMPLETED',   'Replaced failed LED driver; tested OK.',                       ago(40, 3), ago(39),     10003, NULL, 1006, NULL,              '90001');
+  wo('REPAIR',      'COMPLETED',   'Loose neutral at terminal block fixed, photocell replaced.',   ago(35, 5), ago(33),     10011, NULL, 1007, 'KA-EL-2020-1123', '90002');
+  wo('REPLACEMENT', 'COMPLETED',   'Pole replaced with new 9m GI pole and LED fixture.',           ago(30, 2), ago(26),     10019, NULL, 1005, 'KA-EL-2019-0457', '90003');
+  wo('REPAIR',      'COMPLETED',   'Junction box sealed, cable re-terminated, SPD installed.',     ago(25, 1), ago(25, 9),  10027, NULL, 1008, 'KA-EL-2018-0789', '90004');
+  wo('REPAIR',      'COMPLETED',   'Faulty photocell swapped.',                                    ago(20, 6), ago(19),     10035, NULL, 1006, NULL,              '90005');
+  wo('REPLACEMENT', 'COMPLETED',   'Sodium lamp + ballast replaced with LED retrofit.',            ago(15, 4), ago(13),     10043, NULL, 1007, 'KA-EL-2019-0457', '90006');
+  wo('REPAIR',      'IN_PROGRESS', 'Driver ordered, awaiting install.',                            ago(5),     NULL,        10005, NULL, 1006, NULL,              '90007,90015');
+  wo('REPAIR',      'ASSIGNED',    NULL,                                                           ago(4),     NULL,        10014, NULL, 1008, NULL,              '90008');
+  wo('REPAIR',      'IN_PROGRESS', 'Area cordoned off; cable fault being traced.',                 ago(3, 2),  NULL,        10022, NULL, 1005, 'KA-EL-2018-0789', '90009');
+  wo('REPAIR',      'COMPLETED',   'MCB tripped repeatedly; replaced MCB.',                        ago(50, 2), ago(49),     10016, NULL, 1006, NULL,              '90014');
+  wo('PREVENTIVE',  'COMPLETED',   'Quarterly cleaning and IR inspection of Whitefield feeders.',  ago(60),    ago(57),     NULL,  4,    1005, 'KA-EL-2022-2045');
+  wo('INSPECTION',  'PENDING',     NULL,                                                           ago(1),     NULL,        NULL,  6,    1005, NULL);
+  wo('UPGRADE',     'COMPLETED',   'Smart dimming controller retrofitted.',                        ago(70),    ago(68),     10001, NULL, 1011, 'KA-EL-2019-0457');
+END;
+/
 
 UPDATE complaint SET ticket_status = 'CLOSED'   WHERE complaint_id = 90014;
 UPDATE complaint SET ticket_status = 'REJECTED' WHERE complaint_id = 90013;
@@ -290,18 +335,6 @@ INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget
 INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30006, 'RTGS-ICIC2231', 'RTGS',  'RCPT-2026-0171', 8000,  7340,  7340);
 INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30011, 'CHQ-004512',    'CHEQUE','RCPT-2026-0118', 12000, 9530,  9530);
 INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30013, NULL,            'NEFT',   NULL,            5000,  0,     4250);
-
--- ---------- login accounts (HOMEPAGE) : password = Password@123 ----------
-INSERT INTO homepage (username, password, user_type, emp_id)     VALUES ('admin',          '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE', 1001);
-INSERT INTO homepage (username, password, user_type, emp_id)     VALUES ('karthik.menon',  '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE', 1002);
-INSERT INTO homepage (username, password, user_type, emp_id)     VALUES ('suresh.kumar',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE', 1006);
-INSERT INTO homepage (username, password, user_type, emp_id)     VALUES ('vikram.shetty',  '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE', 1009);
-INSERT INTO homepage (username, password, user_type, emp_id)     VALUES ('sneha.k',        '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE', 1010);
-INSERT INTO homepage (username, password, user_type, citizen_id) VALUES ('rohan.desai',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN', 5001);
-INSERT INTO homepage (username, password, user_type, citizen_id) VALUES ('fatima.sheikh',  '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN', 5002);
-INSERT INTO homepage (username, password, user_type, citizen_id) VALUES ('kavya.shenoy',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN', 5004);
-INSERT INTO homepage (username, password, user_type, license_no) VALUES ('lumen',          '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY', 'KA-EL-2019-0457');
-INSERT INTO homepage (username, password, user_type, license_no) VALUES ('brightpath',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY', 'KA-EL-2020-1123');
 
 COMMIT;
 PROMPT Seed data loaded.

@@ -36,8 +36,8 @@ civ.get('/profile', async (req, res) => {
 
 civ.get('/complaints', async (req, res) => {
   res.json(await query(
-    `SELECT c.*, w.status AS work_order_status, w.resolution_notes, w.completion_timestamp
-       FROM v_complaint c LEFT JOIN work_order w ON w.work_order_id = c.latest_work_order_id
+    `SELECT c.*, w.resolution_notes, w.completion_timestamp
+       FROM v_complaint c LEFT JOIN work_order w ON w.work_order_id = c.work_order_id
       WHERE c.citizen_id = :id ORDER BY c.reported_timestamp DESC`,
     { id: req.user.citizenId }
   ));

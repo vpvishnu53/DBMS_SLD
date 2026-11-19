@@ -74,11 +74,15 @@ export default function ResourceForm({ resource, meta, id, defaults, onClose, on
   }, [meta, cfg]);
 
   const set = (name) => (v) => setValues((s) => ({ ...s, [name]: v }));
+  // employees / civilians / companies own exactly one login (1:1, total participation):
+  // it is created with the record and cannot be changed here afterwards
+  const needsLogin = !editing && !!meta.login;
 
   const submit = async (e) => {
     e.preventDefault();
     setSaving(true); setError(null);
     const body = {};
+    if (needsLogin) { body.username = (values.username || '').trim().toLowerCase(); body.password = values.password || ''; }
     for (const f of fields) {
       if (editing && f.pk) continue;
       let v = values[f.name];
@@ -116,6 +120,27 @@ export default function ResourceForm({ resource, meta, id, defaults, onClose, on
       {loading ? <Spinner center /> : (
         <form id="resource-form" onSubmit={submit} noValidate={false}>
           <ErrorBox error={error} />
+          {needsLogin && (
+            <div className="card" style={{ padding: 14, marginBottom: 16, background: 'var(--surface-2)' }}>
+              <div className="card-title" style={{ marginBottom: 10 }}>
+                Login <span className="muted" style={{ fontWeight: 500 }}>every {meta.title.toLowerCase()} has exactly one</span>
+              </div>
+              <div className="form-grid">
+                <div className={`field ${/username/i.test(error?.message || '') ? 'has-error' : ''}`}>
+                  <label htmlFor="f_username">Username<span className="req">*</span></label>
+                  <input id="f_username" className="input" required autoComplete="off" value={values.username || ''}
+                    onChange={(e) => set('username')(e.target.value.toLowerCase())} placeholder="e.g. asha.k" />
+                  <span className="hint">3–40 chars: lowercase letters, digits, dot, underscore</span>
+                </div>
+                <div className={`field ${/password/i.test(error?.message || '') ? 'has-error' : ''}`}>
+                  <label htmlFor="f_password">Password<span className="req">*</span></label>
+                  <input id="f_password" className="input" type="password" required autoComplete="new-password"
+                    value={values.password || ''} onChange={(e) => set('password')(e.target.value)} />
+                  <span className="hint">8+ characters with a letter and a digit</span>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="form-grid">
             {fields.map((f) => {
               const wide = f.type === 'multi' || (f.type === 'string' && f.maxLength > 200);

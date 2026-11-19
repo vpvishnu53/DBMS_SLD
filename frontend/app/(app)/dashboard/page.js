@@ -94,7 +94,7 @@ export default function Dashboard() {
                 <Link href={`/manage/complaints/${c.complaint_id}`} style={{ color: 'var(--text)', fontWeight: 600 }}>
                   #{c.complaint_id} · {enumLabel(c.issue_category)}
                 </Link>
-                <div className="muted" style={{ fontSize: 12 }}>Pole {c.pole_id} · {c.zone_name} · {timeAgo(c.reported_timestamp)}</div>
+                <div className="muted" style={{ fontSize: 12 }}>{c.pole_id ? `Pole ${c.pole_id} · ${c.zone_name}` : "No streetlight"} · {timeAgo(c.reported_timestamp)}</div>
                 <div style={{ marginTop: 4 }}><Badge value={c.ticket_status} /></div>
               </li>
             ))}

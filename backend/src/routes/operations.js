@@ -18,21 +18,25 @@ const int = (v, name) => {
   return n;
 };
 
-/* ---------- complaint -> work order (sp_complaint_to_work_order) ---------- */
+/* ---------- complaint -> work order (sp_complaint_to_work_order) ----------
+ * resolves is 1:N: the new work order also picks up the other open complaints
+ * about the same pole; `linked_complaints` says how many it now resolves. */
 router.post('/complaints/:id/work-order', requireRole('SUPPORT_AGENT', 'ZONE_SUPERVISOR', 'ENGINEER'), async (req, res) => {
   const b = req.body || {};
+  if (!b.emp_id) throw badRequest('emp_id is required: every work order is assigned to exactly one employee.');
   const r = await execute(
-    `BEGIN sp_complaint_to_work_order(:cid, :emp, :lic, :wt, :wo); END;`,
+    `BEGIN sp_complaint_to_work_order(:cid, :emp, :lic, :wt, :wo, :linked); END;`,
     {
       cid: int(req.params.id, 'complaint id'),
-      emp: b.emp_id ? int(b.emp_id, 'emp_id') : null,
+      emp: int(b.emp_id, 'emp_id'),
       lic: b.license_no || null,
       wt: b.work_type || 'REPAIR',
       wo: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+      linked: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
     }
   );
   const wo = await queryOne(`SELECT * FROM v_work_order WHERE work_order_id = :id`, { id: r.outBinds.wo });
-  res.status(201).json(wo);
+  res.status(201).json({ ...wo, linked_complaints: r.outBinds.linked });
 });
 
 /* ---------- work order parts (M:N "uses"; trigger maintains stock) ---------- */

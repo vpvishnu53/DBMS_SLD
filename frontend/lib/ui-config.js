@@ -38,15 +38,15 @@ export const RESOURCES = {
   },
   complaints: {
     icon: 'alert', blurb: 'Citizen-reported issues',
-    columns: ['complaint_id', 'issue_category', 'ticket_status', 'pole_id', 'zone_name', 'citizen_name', 'handler_name', 'reported_timestamp'],
+    columns: ['complaint_id', 'issue_category', 'ticket_status', 'pole_id', 'zone_name', 'citizen_name', 'handler_name', 'work_order_id', 'reported_timestamp'],
     filters: ['ticket_status', 'issue_category', 'zone_id'], status: 'ticket_status',
-    form: ['citizen_id', 'pole_id', 'issue_category', 'ticket_status', 'handled_by', 'reported_timestamp', 'description'],
+    form: ['citizen_id', 'pole_id', 'issue_category', 'ticket_status', 'handled_by', 'work_order_id', 'reported_timestamp', 'description'],
   },
   'work-orders': {
     icon: 'wrench', blurb: 'Repair, replacement and maintenance jobs',
-    columns: ['work_order_id', 'work_type', 'status', 'zone_name', 'pole_id', 'employee_name', 'company_name', 'created_timestamp', 'resolution_hours'],
+    columns: ['work_order_id', 'work_type', 'status', 'zone_name', 'pole_id', 'employee_name', 'company_name', 'complaints_resolved', 'created_timestamp', 'resolution_hours'],
     filters: ['status', 'work_type', 'zone_id'], status: 'status',
-    form: ['work_type', 'status', 'zone_id', 'pole_id', 'complaint_id', 'emp_id', 'license_no', 'created_timestamp', 'completion_timestamp', 'resolution_notes'],
+    form: ['work_type', 'status', 'zone_id', 'pole_id', 'emp_id', 'license_no', 'created_timestamp', 'completion_timestamp', 'resolution_notes'],
   },
   'spare-parts': {
     icon: 'box', blurb: 'Inventory of replacement parts',
@@ -60,7 +60,7 @@ export const RESOURCES = {
   },
   employees: {
     icon: 'users', blurb: 'Staff of the lighting department',
-    columns: ['emp_id', 'full_name', 'role', 'dept_name', 'shift_type', 'age', 'work_experience', 'emails', 'phones'],
+    columns: ['emp_id', 'full_name', 'username', 'role', 'dept_name', 'shift_type', 'age', 'work_experience', 'emails', 'phones'],
     filters: ['dept_id', 'role', 'shift_type'],
     form: ['first_name', 'middle_name', 'last_name', 'date_of_birth', 'date_of_joining', 'aadhar_id', 'dept_id', 'role', 'shift_type', 'salary', 'emails', 'phones', 'street', 'city', 'state', 'pincode'],
   },
@@ -70,7 +70,7 @@ export const RESOURCES = {
   },
   civilians: {
     icon: 'user', blurb: 'Registered citizens',
-    columns: ['citizen_id', 'full_name', 'city', 'pincode', 'emails', 'phones', 'complaint_count'],
+    columns: ['citizen_id', 'full_name', 'username', 'city', 'pincode', 'emails', 'phones', 'complaint_count'],
     form: ['first_name', 'middle_name', 'last_name', 'emails', 'phones', 'street', 'city', 'state', 'pincode'],
   },
   companies: {
@@ -104,7 +104,7 @@ export const EMPLOYEE_NAV = [
     { href: '/manage/departments', label: 'Departments', icon: 'building' },
     { href: '/manage/civilians', label: 'Civilians', icon: 'user' },
     { href: '/manage/companies', label: 'Companies', icon: 'briefcase' },
-    { href: '/users', label: 'User Accounts', icon: 'key', adminOnly: true },
+    { href: '/users', label: 'Logins', icon: 'key', adminOnly: true },
   ] },
 ];
 

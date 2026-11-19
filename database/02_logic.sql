@@ -85,11 +85,32 @@ EXCEPTION
 END;
 /
 
--- Complaint ID + a new fault complaint flags a FUNCTIONAL light as FAULTY
-CREATE OR REPLACE TRIGGER trg_complaint_bi
-BEFORE INSERT ON complaint FOR EACH ROW
+-- Complaint ID, and "resolves": linking a complaint to a work order puts the
+-- ticket in step with that work order; unlinking reopens it.
+CREATE OR REPLACE TRIGGER trg_complaint_biu
+BEFORE INSERT OR UPDATE OF work_order_id ON complaint FOR EACH ROW
+DECLARE
+  v_wo_status work_order.status%TYPE;
 BEGIN
-  IF :NEW.complaint_id IS NULL THEN :NEW.complaint_id := seq_complaint.NEXTVAL; END IF;
+  IF INSERTING AND :NEW.complaint_id IS NULL THEN :NEW.complaint_id := seq_complaint.NEXTVAL; END IF;
+
+  IF :NEW.work_order_id IS NOT NULL
+     AND (INSERTING OR :OLD.work_order_id IS NULL OR :OLD.work_order_id <> :NEW.work_order_id)
+     AND :NEW.ticket_status NOT IN ('CLOSED','REJECTED') THEN
+    SELECT status INTO v_wo_status FROM work_order WHERE work_order_id = :NEW.work_order_id;
+    IF v_wo_status = 'CANCELLED' THEN
+      RAISE_APPLICATION_ERROR(-20023, 'Work order ' || :NEW.work_order_id || ' is cancelled; link the complaint to an active one.');
+    END IF;
+    :NEW.ticket_status := CASE v_wo_status WHEN 'COMPLETED'   THEN 'RESOLVED'
+                                           WHEN 'IN_PROGRESS' THEN 'IN_PROGRESS'
+                                           ELSE 'ASSIGNED' END;
+  ELSIF UPDATING AND :NEW.work_order_id IS NULL AND :OLD.work_order_id IS NOT NULL
+        AND :NEW.ticket_status IN ('ASSIGNED','IN_PROGRESS') THEN
+    :NEW.ticket_status := 'OPEN';
+  END IF;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    RAISE_APPLICATION_ERROR(-20024, 'Work order ' || :NEW.work_order_id || ' does not exist.');
 END;
 /
 CREATE OR REPLACE TRIGGER trg_complaint_ai
@@ -117,13 +138,10 @@ BEGIN
   ELSIF :NEW.status <> 'COMPLETED' THEN
     :NEW.completion_timestamp := NULL;
   END IF;
-  IF :NEW.status = 'ASSIGNED' AND :NEW.emp_id IS NULL AND :NEW.license_no IS NULL THEN
-    RAISE_APPLICATION_ERROR(-20007, 'An ASSIGNED work order needs an employee or a contractor company.');
-  END IF;
 END;
 /
 
--- Work order status cascades to the streetlight and the complaint it resolves
+-- Work order status cascades to the streetlight and to EVERY complaint it resolves (1:N)
 CREATE OR REPLACE TRIGGER trg_work_order_aiu
 AFTER INSERT OR UPDATE OF status ON work_order FOR EACH ROW
 BEGIN
@@ -131,11 +149,11 @@ BEGIN
     UPDATE streetlight SET current_status = 'UNDER_MAINTENANCE'
      WHERE pole_id = :NEW.pole_id AND current_status <> 'DECOMMISSIONED';
     UPDATE complaint SET ticket_status = 'IN_PROGRESS'
-     WHERE complaint_id = :NEW.complaint_id AND ticket_status IN ('OPEN','ASSIGNED');
+     WHERE work_order_id = :NEW.work_order_id AND ticket_status IN ('OPEN','ASSIGNED');
 
   ELSIF :NEW.status = 'ASSIGNED' THEN
     UPDATE complaint SET ticket_status = 'ASSIGNED'
-     WHERE complaint_id = :NEW.complaint_id AND ticket_status = 'OPEN';
+     WHERE work_order_id = :NEW.work_order_id AND ticket_status = 'OPEN';
 
   ELSIF :NEW.status = 'COMPLETED' THEN
     UPDATE streetlight
@@ -144,12 +162,71 @@ BEGIN
                                          TRUNC(CAST(:NEW.completion_timestamp AS DATE)))
      WHERE pole_id = :NEW.pole_id AND current_status <> 'DECOMMISSIONED';
     UPDATE complaint SET ticket_status = 'RESOLVED'
-     WHERE complaint_id = :NEW.complaint_id AND ticket_status NOT IN ('CLOSED','REJECTED');
+     WHERE work_order_id = :NEW.work_order_id AND ticket_status NOT IN ('CLOSED','REJECTED');
 
   ELSIF :NEW.status = 'CANCELLED' THEN
-    UPDATE complaint SET ticket_status = 'OPEN'
-     WHERE complaint_id = :NEW.complaint_id AND ticket_status IN ('ASSIGNED','IN_PROGRESS');
+    -- unlink so the complaints can be dispatched again (trg_complaint_biu reopens them)
+    UPDATE complaint SET work_order_id = NULL
+     WHERE work_order_id = :NEW.work_order_id AND ticket_status IN ('ASSIGNED','IN_PROGRESS');
   END IF;
+END;
+/
+
+-- ---------------------------------------------------------------------
+--  Accounts: logs_into / registers_on / accesses (1:1, total participation)
+-- ---------------------------------------------------------------------
+-- A login may be owned by one row only, in the table matching its user_type.
+CREATE OR REPLACE PROCEDURE sp_assert_login (p_username IN VARCHAR2, p_type IN VARCHAR2) AS
+  v_type homepage.user_type%TYPE;
+BEGIN
+  IF p_username IS NULL THEN RETURN; END IF;   -- NOT NULL constraint reports it
+  SELECT user_type INTO v_type FROM homepage WHERE username = p_username;
+  IF v_type <> p_type THEN
+    RAISE_APPLICATION_ERROR(-20008, 'Login ' || p_username || ' is a ' || v_type || ' account, not ' || p_type || '.');
+  END IF;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    RAISE_APPLICATION_ERROR(-20009, 'Login ' || p_username || ' does not exist; create it first.');
+END;
+/
+CREATE OR REPLACE TRIGGER trg_employee_login BEFORE INSERT OR UPDATE OF username ON employee FOR EACH ROW
+BEGIN sp_assert_login(:NEW.username, 'EMPLOYEE'); END;
+/
+CREATE OR REPLACE TRIGGER trg_civilian_login BEFORE INSERT OR UPDATE OF username ON civilian FOR EACH ROW
+BEGIN sp_assert_login(:NEW.username, 'CIVILIAN'); END;
+/
+CREATE OR REPLACE TRIGGER trg_company_login  BEFORE INSERT OR UPDATE OF username ON company  FOR EACH ROW
+BEGIN sp_assert_login(:NEW.username, 'COMPANY'); END;
+/
+
+-- Deleting an employee / civilian / company also deletes its login.
+-- Compound triggers collect the usernames per row and delete them once the
+-- statement is done (so the FK from the owner no longer blocks the delete).
+CREATE OR REPLACE TRIGGER trg_employee_drop_login FOR DELETE ON employee COMPOUND TRIGGER
+  TYPE t_names IS TABLE OF homepage.username%TYPE;
+  g_names t_names := t_names();
+  AFTER EACH ROW IS BEGIN g_names.EXTEND; g_names(g_names.LAST) := :OLD.username; END AFTER EACH ROW;
+  AFTER STATEMENT IS BEGIN
+    FORALL i IN 1 .. g_names.COUNT DELETE FROM homepage WHERE username = g_names(i);
+  END AFTER STATEMENT;
+END;
+/
+CREATE OR REPLACE TRIGGER trg_civilian_drop_login FOR DELETE ON civilian COMPOUND TRIGGER
+  TYPE t_names IS TABLE OF homepage.username%TYPE;
+  g_names t_names := t_names();
+  AFTER EACH ROW IS BEGIN g_names.EXTEND; g_names(g_names.LAST) := :OLD.username; END AFTER EACH ROW;
+  AFTER STATEMENT IS BEGIN
+    FORALL i IN 1 .. g_names.COUNT DELETE FROM homepage WHERE username = g_names(i);
+  END AFTER STATEMENT;
+END;
+/
+CREATE OR REPLACE TRIGGER trg_company_drop_login FOR DELETE ON company COMPOUND TRIGGER
+  TYPE t_names IS TABLE OF homepage.username%TYPE;
+  g_names t_names := t_names();
+  AFTER EACH ROW IS BEGIN g_names.EXTEND; g_names(g_names.LAST) := :OLD.username; END AFTER EACH ROW;
+  AFTER STATEMENT IS BEGIN
+    FORALL i IN 1 .. g_names.COUNT DELETE FROM homepage WHERE username = g_names(i);
+  END AFTER STATEMENT;
 END;
 /
 
@@ -214,38 +291,47 @@ END;
 --  4. PROCEDURES  (multi-step operations kept atomic in the database)
 -- =====================================================================
 
--- Raise a work order straight from a citizen complaint
+-- Raise a work order from a citizen complaint. "resolves" is 1:N, so the new
+-- work order also picks up every other OPEN, unlinked complaint on the same pole.
 CREATE OR REPLACE PROCEDURE sp_complaint_to_work_order (
   p_complaint_id  IN  NUMBER,
   p_emp_id        IN  NUMBER,
   p_license_no    IN  VARCHAR2,
   p_work_type     IN  VARCHAR2,
-  p_work_order_id OUT NUMBER
+  p_work_order_id OUT NUMBER,
+  p_linked        OUT NUMBER      -- how many complaints the new work order resolves
 ) AS
   v_pole   complaint.pole_id%TYPE;
   v_status complaint.ticket_status%TYPE;
-  v_open   NUMBER;
+  v_wo     complaint.work_order_id%TYPE;
 BEGIN
-  SELECT pole_id, ticket_status INTO v_pole, v_status
+  SELECT pole_id, ticket_status, work_order_id INTO v_pole, v_status, v_wo
     FROM complaint WHERE complaint_id = p_complaint_id FOR UPDATE;
 
   IF v_status IN ('RESOLVED','CLOSED','REJECTED') THEN
     RAISE_APPLICATION_ERROR(-20020, 'Complaint ' || p_complaint_id || ' is already ' || v_status || '.');
   END IF;
-
-  SELECT COUNT(*) INTO v_open FROM work_order
-   WHERE complaint_id = p_complaint_id AND status NOT IN ('COMPLETED','CANCELLED');
-  IF v_open > 0 THEN
-    RAISE_APPLICATION_ERROR(-20021, 'Complaint ' || p_complaint_id || ' already has an open work order.');
+  IF v_wo IS NOT NULL THEN
+    RAISE_APPLICATION_ERROR(-20021, 'Complaint ' || p_complaint_id || ' is already linked to work order ' || v_wo || '.');
+  END IF;
+  IF p_emp_id IS NULL THEN
+    RAISE_APPLICATION_ERROR(-20025, 'Choose an employee: every work order must be assigned to one (assigned_to).');
+  END IF;
+  IF v_pole IS NULL THEN
+    RAISE_APPLICATION_ERROR(-20026, 'Complaint ' || p_complaint_id || ' names no streetlight; create a work order for its zone and link it manually.');
   END IF;
 
-  INSERT INTO work_order (work_type, status, pole_id, complaint_id, emp_id, license_no)
-  VALUES (NVL(p_work_type, 'REPAIR'),
-          CASE WHEN p_emp_id IS NOT NULL OR p_license_no IS NOT NULL THEN 'ASSIGNED' ELSE 'PENDING' END,
-          v_pole, p_complaint_id, p_emp_id, p_license_no)
+  INSERT INTO work_order (work_type, status, pole_id, emp_id, license_no)
+  VALUES (NVL(p_work_type, 'REPAIR'), 'ASSIGNED', v_pole, p_emp_id, p_license_no)
   RETURNING work_order_id INTO p_work_order_id;
 
-  UPDATE complaint SET handled_by = NVL(handled_by, p_emp_id) WHERE complaint_id = p_complaint_id;
+  -- trg_complaint_biu sets each linked ticket to ASSIGNED
+  UPDATE complaint
+     SET work_order_id = p_work_order_id,
+         handled_by    = NVL(handled_by, p_emp_id)
+   WHERE complaint_id = p_complaint_id
+      OR (pole_id = v_pole AND work_order_id IS NULL AND ticket_status = 'OPEN');
+  p_linked := SQL%ROWCOUNT;
 EXCEPTION
   WHEN NO_DATA_FOUND THEN
     RAISE_APPLICATION_ERROR(-20022, 'Complaint ' || p_complaint_id || ' not found.');
@@ -281,8 +367,8 @@ CREATE OR REPLACE VIEW v_employee AS
 SELECT e.emp_id, e.first_name, e.middle_name, e.last_name,
        e.first_name || NVL2(e.middle_name, ' ' || e.middle_name, '') || ' ' || e.last_name AS full_name,
        e.date_of_birth, e.date_of_joining, e.role, e.aadhar_id, e.shift_type, e.salary,
-       e.street, e.city, e.state, e.pincode, e.dept_id, d.dept_name,
-       fn_years_since(e.date_of_birth)                                   AS age,             -- derived
+       e.street, e.city, e.state, e.pincode, e.dept_id, d.dept_name, e.username,
+       fn_years_since(e.date_of_birth)                                  AS age,             -- derived
        ROUND(MONTHS_BETWEEN(TRUNC(SYSDATE), e.date_of_joining) / 12, 1)  AS work_experience, -- derived
        (SELECT LISTAGG(email, ', ') WITHIN GROUP (ORDER BY email)
           FROM employee_email x WHERE x.emp_id = e.emp_id)              AS emails,
@@ -299,7 +385,7 @@ SELECT d.dept_id, d.dept_name, d.dept_type,
 CREATE OR REPLACE VIEW v_civilian AS
 SELECT c.citizen_id, c.first_name, c.middle_name, c.last_name,
        c.first_name || NVL2(c.middle_name, ' ' || c.middle_name, '') || ' ' || c.last_name AS full_name,
-       c.street, c.city, c.state, c.pincode,
+       c.street, c.city, c.state, c.pincode, c.username,
        (SELECT LISTAGG(email, ', ') WITHIN GROUP (ORDER BY email)
           FROM civilian_email x WHERE x.citizen_id = c.citizen_id)              AS emails,
        (SELECT LISTAGG(phone_number, ', ') WITHIN GROUP (ORDER BY phone_number)
@@ -309,7 +395,7 @@ SELECT c.citizen_id, c.first_name, c.middle_name, c.last_name,
 
 CREATE OR REPLACE VIEW v_company AS
 SELECT c.license_no, c.company_name, c.contractor_name, c.gst_no, c.class_rating,
-       c.street, c.city, c.state, c.pincode,
+       c.street, c.city, c.state, c.pincode, c.username,
        (SELECT LISTAGG(phone_no, ', ') WITHIN GROUP (ORDER BY phone_no)
           FROM company_phone x WHERE x.license_no = c.license_no)                          AS phones,
        (SELECT COUNT(*) FROM work_order w WHERE w.license_no = c.license_no)               AS work_order_count,
@@ -363,13 +449,15 @@ CREATE OR REPLACE VIEW v_complaint AS
 SELECT c.complaint_id, c.issue_category, c.description, c.ticket_status, c.reported_timestamp,
        c.citizen_id, cv.first_name || ' ' || cv.last_name AS citizen_name,
        c.pole_id, s.zone_id, z.zone_name, s.current_status AS light_status,
-       c.handled_by, e.first_name || ' ' || e.last_name    AS handler_name,
-       (SELECT MAX(w.work_order_id) FROM work_order w WHERE w.complaint_id = c.complaint_id) AS latest_work_order_id
+       c.handled_by,
+       CASE WHEN e.emp_id IS NOT NULL THEN e.first_name || ' ' || e.last_name END AS handler_name,
+       c.work_order_id, w.status AS work_order_status
   FROM complaint c
-  JOIN civilian cv   ON cv.citizen_id = c.citizen_id
-  JOIN streetlight s ON s.pole_id = c.pole_id
-  JOIN zone z        ON z.zone_id = s.zone_id
-  LEFT JOIN employee e ON e.emp_id = c.handled_by;
+  JOIN civilian cv          ON cv.citizen_id = c.citizen_id
+  LEFT JOIN streetlight s   ON s.pole_id = c.pole_id          -- receives is optional (0..1)
+  LEFT JOIN zone z          ON z.zone_id = s.zone_id
+  LEFT JOIN employee e      ON e.emp_id = c.handled_by
+  LEFT JOIN work_order w    ON w.work_order_id = c.work_order_id;
 
 CREATE OR REPLACE VIEW v_work_order AS
 SELECT w.work_order_id, w.work_type, w.status, w.resolution_notes,
@@ -377,14 +465,15 @@ SELECT w.work_order_id, w.work_type, w.status, w.resolution_notes,
        CASE WHEN w.completion_timestamp IS NOT NULL THEN
          ROUND((CAST(w.completion_timestamp AS DATE) - CAST(w.created_timestamp AS DATE)) * 24, 2)
        END                                                    AS resolution_hours,  -- derived
-       w.zone_id, z.zone_name, w.pole_id, w.complaint_id,
+       w.zone_id, z.zone_name, w.pole_id,
        w.emp_id, e.first_name || ' ' || e.last_name           AS employee_name,
        w.license_no, co.company_name,
+       (SELECT COUNT(*) FROM complaint c WHERE c.work_order_id = w.work_order_id)   AS complaints_resolved,
        fn_work_order_parts_cost(w.work_order_id)              AS parts_cost,
        (SELECT b.billing_id FROM billing b WHERE b.work_order_id = w.work_order_id) AS billing_id
   FROM work_order w
   JOIN zone z          ON z.zone_id = w.zone_id
-  LEFT JOIN employee e ON e.emp_id = w.emp_id
+  JOIN employee e      ON e.emp_id = w.emp_id
   LEFT JOIN company co ON co.license_no = w.license_no;
 
 CREATE OR REPLACE VIEW v_work_order_part AS
@@ -412,7 +501,7 @@ SELECT b.billing_id, b.work_order_id, b.payment_id, b.payment_type, b.receipt_no
   LEFT JOIN company co ON co.license_no = w.license_no;
 
 CREATE OR REPLACE VIEW v_homepage AS
-SELECT h.username, h.user_type, h.emp_id, h.citizen_id, h.license_no, h.is_active,
+SELECT h.username, h.user_type, e.emp_id, c.citizen_id, co.license_no, h.is_active,
        h.created_at, h.last_login_at,
        CASE h.user_type
          WHEN 'EMPLOYEE' THEN e.first_name || ' ' || e.last_name
@@ -421,9 +510,9 @@ SELECT h.username, h.user_type, h.emp_id, h.citizen_id, h.license_no, h.is_activ
        END                                          AS display_name,
        e.role                                       AS employee_role
   FROM homepage h
-  LEFT JOIN employee e  ON e.emp_id = h.emp_id
-  LEFT JOIN civilian c  ON c.citizen_id = h.citizen_id
-  LEFT JOIN company co  ON co.license_no = h.license_no;
+  LEFT JOIN employee e  ON e.username = h.username
+  LEFT JOIN civilian c  ON c.username = h.username
+  LEFT JOIN company co  ON co.username = h.username;
 
 PROMPT Logic layer created.
 EXIT

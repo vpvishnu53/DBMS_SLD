@@ -22,6 +22,7 @@ const RELATED = {
     { title: 'Work orders', resource: 'work-orders', filter: 'zone_id' },
   ],
   'feeder-pillars': [{ title: 'Streetlights powered', resource: 'streetlights', filter: 'cabinet_id' }],
+  'work-orders': [{ title: 'Complaints resolved', resource: 'complaints', filter: 'work_order_id' }],
   departments: [{ title: 'Employees', resource: 'employees', filter: 'dept_id' }],
   civilians: [{ title: 'Complaints submitted', resource: 'complaints', filter: 'citizen_id' }],
   companies: [{ title: 'Work orders executed', resource: 'work-orders', filter: 'license_no' }],
@@ -166,7 +167,7 @@ function WorkOrderPanels({ id, row, onChange }) {
           </button>
         ))}
         <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-          Status changes fire <span className="mono">trg_work_order_aiu</span>: the streetlight and the linked complaint update automatically.
+          Status changes fire <span className="mono">trg_work_order_aiu</span>: the streetlight and every complaint this work order resolves update automatically.
         </p>
         {row.billing_id && <Link className="btn btn-sm" href={`/manage/billing/${row.billing_id}`}>View bill BILL-{row.billing_id}</Link>}
       </div>
@@ -178,6 +179,7 @@ function WorkOrderPanels({ id, row, onChange }) {
 function DispatchButton({ complaint, meta, onDone }) {
   const { user } = useAuth();
   const router = useRouter();
+  const toast = useToast();
   const [open, setOpen] = useState(false);
   const [v, setV] = useState({ work_type: 'REPAIR', emp_id: '', license_no: '' });
   const [error, setError] = useState(null);
@@ -186,11 +188,14 @@ function DispatchButton({ complaint, meta, onDone }) {
   const types = meta['work-orders'].fields.find((f) => f.name === 'work_type')?.enum || [];
   if (!['ADMIN', 'SUPPORT_AGENT', 'ZONE_SUPERVISOR', 'ENGINEER'].includes(user.role)) return null;
   if (['RESOLVED', 'CLOSED', 'REJECTED'].includes(complaint.ticket_status)) return null;
+  if (complaint.work_order_id) return null; // resolves: a complaint has at most one work order
+  if (!complaint.pole_id) return null;      // no streetlight -> create a zone work order and link it
 
   const submit = async (e) => {
     e.preventDefault(); setError(null);
     try {
       const wo = await api(`/complaints/${complaint.complaint_id}/work-order`, { method: 'POST', body: v });
+      toast(`WO-${wo.work_order_id} created · resolves ${wo.linked_complaints} complaint${wo.linked_complaints === 1 ? '' : 's'} on pole ${wo.pole_id}`);
       onDone?.(); router.push(`/manage/work-orders/${wo.work_order_id}`);
     } catch (err) { setError(err); }
   };
@@ -208,15 +213,19 @@ function DispatchButton({ complaint, meta, onDone }) {
               <select className="select" value={v.work_type} onChange={(e) => setV((s) => ({ ...s, work_type: e.target.value }))}>
                 {types.map((t) => <option key={t} value={t}>{enumLabel(t)}</option>)}
               </select></div>
-            <div className="field"><label>Assign employee</label>
-              <select className="select" value={v.emp_id} onChange={(e) => setV((s) => ({ ...s, emp_id: e.target.value }))}>
-                <option value="">— none —</option>{(employees || []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select></div>
+            <div className="field"><label>Assign employee<span className="req">*</span></label>
+              <select className="select" required value={v.emp_id} onChange={(e) => setV((s) => ({ ...s, emp_id: e.target.value }))}>
+                <option value="">Select…</option>{(employees || []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <span className="hint">Every work order is assigned to exactly one employee.</span></div>
             <div className="field"><label>Contractor company</label>
               <select className="select" value={v.license_no} onChange={(e) => setV((s) => ({ ...s, license_no: e.target.value }))}>
                 <option value="">— in-house —</option>{(companies || []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select></div>
-            <p className="muted" style={{ fontSize: 12, margin: 0 }}>Runs PL/SQL <span className="mono">sp_complaint_to_work_order</span> atomically.</p>
+            <p className="muted" style={{ fontSize: 12, margin: 0 }}>
+              Runs PL/SQL <span className="mono">sp_complaint_to_work_order</span>. Other open complaints about the
+              same pole are attached to the same work order (one work order resolves many complaints).
+            </p>
           </form>
         </Modal>
       )}

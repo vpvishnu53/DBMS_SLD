@@ -28,9 +28,12 @@ const CONSTRAINT_MESSAGES = {
   UQ_COMPANY_GST: 'A company with this GST number already exists.',
   PK_COMPANY: 'A company with this licence number already exists.',
   PK_HOMEPAGE: 'That username is taken.',
-  UQ_HOMEPAGE_EMP: 'This employee already has a login.',
-  UQ_HOMEPAGE_CIV: 'This citizen already has a login.',
-  UQ_HOMEPAGE_COMP: 'This company already has a login.',
+  UQ_EMPLOYEE_USERNAME: 'That login already belongs to another employee.',
+  UQ_CIVILIAN_USERNAME: 'That login already belongs to another citizen.',
+  UQ_COMPANY_USERNAME: 'That login already belongs to another company.',
+  FK_EMPLOYEE_LOGIN: 'This login still belongs to an employee; delete the employee instead.',
+  FK_CIVILIAN_LOGIN: 'This login still belongs to a citizen; delete the citizen instead.',
+  FK_COMPANY_LOGIN: 'This login still belongs to a company; delete the company instead.',
   UQ_BILLING_WO: 'This work order has already been billed.',
   UQ_BILLING_RECEIPT: 'Receipt number already used.',
   UQ_ZONE_NAME: 'A zone with this name already exists.',
@@ -61,7 +64,7 @@ function mapOracleError(err) {
     case 2291: // parent key not found
       return badRequest(`Referenced record does not exist (${c}).`, { constraint: c });
     case 2292: // child record found
-      return new HttpError(409, 'This record is still referenced by other records and cannot be deleted.', { constraint: c });
+      return new HttpError(409, friendly || 'This record is still referenced by other records and cannot be deleted.', { constraint: c });
     case 1438: case 12899:
       return badRequest('A value is too large for its field.');
     case 1840: case 1841: case 1843: case 1847: case 1858: case 1861:

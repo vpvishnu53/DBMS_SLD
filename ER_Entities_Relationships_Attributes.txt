@@ -136,36 +136,121 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
 ---------------------------------------------------------------------
  A2. RELATIONSHIP SETS
 ---------------------------------------------------------------------
- (The diagram draws no attributes on any relationship, except that the
-  implementation adds quantity_used to "uses" - see Part B.)
+ Crow's-foot ends as drawn in the diagram. The symbol written next to an
+ entity says how many of THAT entity go with one of the other entity:
+   ||  exactly one        o|  zero or one
+   |<  one or many        o<  zero or many
+ The only attribute on a relationship is quantity_used on "uses".
 
-  #  Relationship   Entities                          Cardinality
- --  -------------  --------------------------------  ------------------
-  1  employs        DEPARTMENT - EMPLOYEE             1:N
-  2  logs_into      EMPLOYEE - HOMEPAGE               1:0..1
-  3  registers_on   CIVILIAN - HOMEPAGE               1:0..1
-  4  accesses       COMPANY - HOMEPAGE                1:0..1
-  5  supervises     EMPLOYEE - ZONE                   1:N
-  6  handles        EMPLOYEE - COMPLAINT              1:N
-  7  assigned_to    EMPLOYEE - WORK_ORDER             1:N
-  8  submits        CIVILIAN - COMPLAINT              1:N
-  9  executes       COMPANY - WORK_ORDER              1:N
- 10  scheduled_in   ZONE - WORK_ORDER                 1:N
- 11  contains       ZONE - FEEDER_PILLAR              1:N
- 12  located_in     ZONE - STREETLIGHT                1:N
- 13  deployed_in    ZONE - SENSOR                     1:N
- 14  powers         FEEDER_PILLAR - STREETLIGHT       1:N
- 15  has            STREETLIGHT - SENSOR              1:N
- 16  receives       STREETLIGHT - COMPLAINT           1:N
- 17  requires       STREETLIGHT - WORK_ORDER          1:N
- 18  resolves       COMPLAINT - WORK_ORDER            1:N
- 19  generates      WORK_ORDER - BILLING              1:0..1
- 20  uses           WORK_ORDER - SPARE_PARTS          M:N
- 21  records        STREETLIGHT - ENERGY_LOG          1:N   (identifying relationship
-                                                            of the weak entity)
+  1. employs       DEPARTMENT || ---- |< EMPLOYEE      (1:N)
+      DEPARTMENT: exactly one   |   EMPLOYEE: one or many
+      every employee works in exactly one department; a department has one or more employees
+      implemented as: EMPLOYEE.dept_id  NOT NULL
 
- Cardinalities are as implemented in the database, which is how the
- diagram's crow's-foot / bar symbols were interpreted.
+  2. logs_into     EMPLOYEE o| ---- || HOMEPAGE      (1:1)
+      EMPLOYEE: zero or one   |   HOMEPAGE: exactly one
+      every employee has exactly one login; a login belongs to at most one employee
+      implemented as: EMPLOYEE.username  NOT NULL UNIQUE -> HOMEPAGE
+
+  3. registers_on  CIVILIAN o| ---- || HOMEPAGE      (1:1)
+      CIVILIAN: zero or one   |   HOMEPAGE: exactly one
+      every citizen has exactly one login; a login belongs to at most one citizen
+      implemented as: CIVILIAN.username  NOT NULL UNIQUE -> HOMEPAGE
+
+  4. accesses      COMPANY o| ---- || HOMEPAGE      (1:1)
+      COMPANY: zero or one   |   HOMEPAGE: exactly one
+      every company has exactly one login; a login belongs to at most one company
+      implemented as: COMPANY.username  NOT NULL UNIQUE -> HOMEPAGE
+
+  5. supervises    EMPLOYEE || ---- o< ZONE      (1:N)
+      EMPLOYEE: exactly one   |   ZONE: zero or many
+      every zone has exactly one supervisor; an employee supervises zero or more zones
+      implemented as: ZONE.emp_id  NOT NULL
+
+  6. handles       EMPLOYEE o| ---- o< COMPLAINT      (1:N)
+      EMPLOYEE: zero or one   |   COMPLAINT: zero or many
+      a complaint is handled by zero or one employee; an employee handles zero or more complaints
+      implemented as: COMPLAINT.handled_by  nullable
+
+  7. assigned_to   EMPLOYEE || ---- o< WORK_ORDER      (1:N)
+      EMPLOYEE: exactly one   |   WORK_ORDER: zero or many
+      every work order is assigned to exactly one employee; an employee has zero or more work orders
+      implemented as: WORK_ORDER.emp_id  NOT NULL
+
+  8. submits       CIVILIAN || ---- o< COMPLAINT      (1:N)
+      CIVILIAN: exactly one   |   COMPLAINT: zero or many
+      every complaint is submitted by exactly one citizen; a citizen submits zero or more
+      implemented as: COMPLAINT.citizen_id  NOT NULL
+
+  9. executes      COMPANY o| ---- o< WORK_ORDER      (1:N)
+      COMPANY: zero or one   |   WORK_ORDER: zero or many
+      a work order is executed by zero or one contractor company; a company executes zero or more
+      implemented as: WORK_ORDER.license_no  nullable
+
+ 10. scheduled_in  ZONE || ---- o< WORK_ORDER      (1:N)
+      ZONE: exactly one   |   WORK_ORDER: zero or many
+      every work order is scheduled in exactly one zone; a zone has zero or more work orders
+      implemented as: WORK_ORDER.zone_id  NOT NULL
+
+ 11. contains      ZONE || ---- o< FEEDER_PILLAR      (1:N)
+      ZONE: exactly one   |   FEEDER_PILLAR: zero or many
+      every feeder pillar is in exactly one zone; a zone contains zero or more feeder pillars
+      implemented as: FEEDER_PILLAR.zone_id  NOT NULL
+
+ 12. located_in    ZONE || ---- o< STREETLIGHT      (1:N)
+      ZONE: exactly one   |   STREETLIGHT: zero or many
+      every streetlight is in exactly one zone; a zone has zero or more streetlights
+      implemented as: STREETLIGHT.zone_id  NOT NULL
+
+ 13. deployed_in   ZONE || ---- o< SENSOR      (1:N)
+      ZONE: exactly one   |   SENSOR: zero or many
+      every sensor is deployed in exactly one zone; a zone has zero or more sensors
+      implemented as: SENSOR.zone_id  NOT NULL
+
+ 14. powers        FEEDER_PILLAR || ---- |< STREETLIGHT      (1:N)
+      FEEDER_PILLAR: exactly one   |   STREETLIGHT: one or many
+      every streetlight is powered by exactly one feeder pillar; a feeder powers one or more lights
+      implemented as: STREETLIGHT.cabinet_id  NOT NULL
+
+ 15. has           STREETLIGHT || ---- o< SENSOR      (1:N)
+      STREETLIGHT: exactly one   |   SENSOR: zero or many
+      every sensor is mounted on exactly one streetlight; a streetlight has zero or more sensors
+      implemented as: SENSOR.pole_id  NOT NULL
+
+ 16. receives      STREETLIGHT o| ---- o< COMPLAINT      (1:N)
+      STREETLIGHT: zero or one   |   COMPLAINT: zero or many
+      a complaint is about zero or one streetlight; a streetlight receives zero or more complaints
+      implemented as: COMPLAINT.pole_id  nullable
+
+ 17. requires      STREETLIGHT o| ---- o< WORK_ORDER      (1:N)
+      STREETLIGHT: zero or one   |   WORK_ORDER: zero or many
+      a work order requires zero or one streetlight; a streetlight has zero or more work orders
+      implemented as: WORK_ORDER.pole_id  nullable
+
+ 18. resolves      WORK_ORDER o| ---- o< COMPLAINT      (1:N)
+      WORK_ORDER: zero or one   |   COMPLAINT: zero or many
+      a complaint is resolved by zero or one work order; one work order resolves zero or more complaints
+      implemented as: COMPLAINT.work_order_id  nullable
+
+ 19. generates     WORK_ORDER || ---- o| BILLING      (1:1)
+      WORK_ORDER: exactly one   |   BILLING: zero or one
+      every bill belongs to exactly one work order; a work order generates zero or one bill
+      implemented as: BILLING.work_order_id  NOT NULL UNIQUE
+
+ 20. uses          WORK_ORDER o< ---- o< SPARE_PARTS      (M:N)
+      WORK_ORDER: zero or many   |   SPARE_PARTS: zero or many
+      a work order uses zero or more parts; a part is used by zero or more work orders
+      implemented as: junction table WORK_ORDER_PART(work_order_id, part_id, quantity_used)
+
+ 21. records       STREETLIGHT || ---- o< ENERGY_LOG      (1:N)
+      STREETLIGHT: exactly one   |   ENERGY_LOG: zero or many
+      every energy log belongs to exactly one streetlight; a light has zero or more logs (identifying)
+      implemented as: ENERGY_LOG.pole_id  NOT NULL, part of PK (pole_id, log_number)
+
+ Not enforced on purpose: the "one or many" minimum in #1 (every department
+ has an employee) and #14 (every feeder powers a light). A foreign key cannot
+ require a parent to have children, and enforcing it would make it impossible
+ to add a new department or feeder pillar before its first employee or light.
 
 
 #####################################################################
@@ -184,35 +269,17 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
        location -> latitude, longitude
    * Multivalued attributes get their own child table
    * Derived attributes are NOT stored; they are computed in SQL views
-   * 1:N relationships become a foreign key on the "N" side
+   * 1:N relationships become a foreign key on the "many" side;
+     "exactly one" (||) on the other end -> NOT NULL, "zero or one" (o|) -> nullable
+   * 1:1 relationships (logs_into, registers_on, accesses) put the foreign key
+     on the side that MUST take part (EMPLOYEE / CIVILIAN / COMPANY), so it can
+     be NOT NULL; UNIQUE keeps it one-to-one
    * "uses" (M:N) becomes the table WORK_ORDER_PART
    * ENERGY_LOG's primary key is (pole_id, log_number)
-
- Where each relationship lives in the tables:
-   employs       -> EMPLOYEE.dept_id
-   logs_into     -> HOMEPAGE.emp_id          (unique)
-   registers_on  -> HOMEPAGE.citizen_id      (unique)
-   accesses      -> HOMEPAGE.license_no      (unique)
-   supervises    -> ZONE.emp_id
-   handles       -> COMPLAINT.handled_by
-   assigned_to   -> WORK_ORDER.emp_id
-   submits       -> COMPLAINT.citizen_id
-   executes      -> WORK_ORDER.license_no
-   scheduled_in  -> WORK_ORDER.zone_id
-   contains      -> FEEDER_PILLAR.zone_id
-   located_in    -> STREETLIGHT.zone_id
-   deployed_in   -> SENSOR.zone_id
-   powers        -> STREETLIGHT.cabinet_id
-   has           -> SENSOR.pole_id
-   receives      -> COMPLAINT.pole_id
-   requires      -> WORK_ORDER.pole_id
-   resolves      -> WORK_ORDER.complaint_id
-   generates     -> BILLING.work_order_id    (unique)
-   uses          -> WORK_ORDER_PART (work_order_id, part_id, quantity_used)
-   records       -> ENERGY_LOG.pole_id       (part of its primary key)
+ (Section A2 lists where each relationship is stored.)
 
 ---------------------------------------------------------------------
- B1. TABLES AND COLUMNS
+ B1. TABLES AND COLUMNS  (generated from the live database)
 ---------------------------------------------------------------------
  Each column: name, Oracle type, then flags
    PK = primary key   FK -> t.c = foreign key   UQ = unique   NN = NOT NULL
@@ -236,6 +303,7 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       city         VARCHAR2(60)
       state        VARCHAR2(60)
       pincode      CHAR(6)
+      username     VARCHAR2(40)   FK -> HOMEPAGE.username, UQ, NN
 
  3. CIVILIAN_EMAIL
       citizen_id  NUMBER(8)      PK, FK -> CIVILIAN.citizen_id
@@ -257,6 +325,7 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       city             VARCHAR2(60)
       state            VARCHAR2(60)
       pincode          CHAR(6)
+      username         VARCHAR2(40)   FK -> HOMEPAGE.username, UQ, NN
 
  6. COMPANY_PHONE
       license_no  VARCHAR2(20)  PK, FK -> COMPANY.license_no
@@ -270,8 +339,9 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       ticket_status       VARCHAR2(12)    NN
       reported_timestamp  TIMESTAMP(6)    NN
       citizen_id          NUMBER(8)       FK -> CIVILIAN.citizen_id, NN
-      pole_id             NUMBER(8)       FK -> STREETLIGHT.pole_id, NN
+      pole_id             NUMBER(8)       FK -> STREETLIGHT.pole_id
       handled_by          NUMBER(8)       FK -> EMPLOYEE.emp_id
+      work_order_id       NUMBER(8)       FK -> WORK_ORDER.work_order_id
 
  8. DEPARTMENT
       dept_id    NUMBER(6)      PK
@@ -294,6 +364,7 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       state            VARCHAR2(60)
       pincode          CHAR(6)
       dept_id          NUMBER(6)      FK -> DEPARTMENT.dept_id, NN
+      username         VARCHAR2(40)   FK -> HOMEPAGE.username, UQ, NN
 
 10. EMPLOYEE_EMAIL
       emp_id  NUMBER(8)      PK, FK -> EMPLOYEE.emp_id
@@ -325,9 +396,6 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       username       VARCHAR2(40)   PK
       password       VARCHAR2(100)  NN
       user_type      VARCHAR2(10)   NN
-      emp_id         NUMBER(8)      FK -> EMPLOYEE.emp_id, UQ
-      citizen_id     NUMBER(8)      FK -> CIVILIAN.citizen_id, UQ
-      license_no     VARCHAR2(20)   FK -> COMPANY.license_no, UQ
       is_active      CHAR(1)        NN
       created_at     TIMESTAMP(6)   NN
       last_login_at  TIMESTAMP(6)
@@ -370,8 +438,7 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       completion_timestamp  TIMESTAMP(6)
       zone_id               NUMBER(6)       FK -> ZONE.zone_id, NN
       pole_id               NUMBER(8)       FK -> STREETLIGHT.pole_id
-      complaint_id          NUMBER(8)       FK -> COMPLAINT.complaint_id
-      emp_id                NUMBER(8)       FK -> EMPLOYEE.emp_id
+      emp_id                NUMBER(8)       FK -> EMPLOYEE.emp_id, NN
       license_no            VARCHAR2(20)    FK -> COMPANY.license_no
 
 19. WORK_ORDER_PART
@@ -384,7 +451,7 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       zone_id      NUMBER(6)     PK
       zone_name    VARCHAR2(80)  UQ, NN
       city_region  VARCHAR2(80)  NN
-      emp_id       NUMBER(8)     FK -> EMPLOYEE.emp_id
+      emp_id       NUMBER(8)     FK -> EMPLOYEE.emp_id, NN
 
 ---------------------------------------------------------------------
  B2. DERIVED ATTRIBUTES (computed in views, never stored)
@@ -398,14 +465,24 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
 ---------------------------------------------------------------------
  B3. ATTRIBUTES THE WEBSITE ADDED BEYOND THE DIAGRAM
 ---------------------------------------------------------------------
-   HOMEPAGE.user_type        which kind of account: EMPLOYEE / CIVILIAN / COMPANY
-   HOMEPAGE.emp_id           links the login to exactly one employee,
-   HOMEPAGE.citizen_id       citizen or company (a CHECK allows only one)
-   HOMEPAGE.license_no
+   HOMEPAGE.user_type        which kind of owner: EMPLOYEE / CIVILIAN / COMPANY
+                             (a trigger checks the owner's table matches it)
    HOMEPAGE.is_active        lets an admin disable a login
    HOMEPAGE.created_at       account creation time
    HOMEPAGE.last_login_at    last successful sign-in
    WORK_ORDER_PART.quantity_used   how many of a part a work order used
-   SENSOR.pole_id            sensor mounted on a pole (relationship "has")
-   Foreign-key columns that implement the relationships (see list above).
+   Foreign-key columns that store the relationships (listed in A2).
    Child tables for the multivalued attributes (EMPLOYEE_EMAIL, etc.).
+
+---------------------------------------------------------------------
+ B4. CHANGES MADE AFTER CHECKING THE DIAGRAM'S CROW'S-FOOT SYMBOLS
+---------------------------------------------------------------------
+   #18 resolves      was reversed. Now: one work order resolves many complaints
+                     (COMPLAINT.work_order_id). Dispatching a complaint also
+                     attaches other open complaints about the same pole.
+   #5  supervises    ZONE.emp_id is now NOT NULL (every zone has a supervisor).
+   #7  assigned_to   WORK_ORDER.emp_id is now NOT NULL (every job has an employee).
+   #16 receives      COMPLAINT.pole_id is now optional (zero or one streetlight).
+   #2-4 logins       every employee, citizen and company now has exactly one
+                     login; the key moved from HOMEPAGE to the owner's table.
+                     The login is created with its owner and deleted with it.

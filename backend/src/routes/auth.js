@@ -8,12 +8,14 @@ const { sign, authenticate } = require('../middleware/auth');
 const { HttpError, badRequest } = require('../middleware/errors');
 const { describeTable } = require('../lib/schema');
 const { coerceRow, coerceValue } = require('../lib/validate');
+const { checkUsername, checkPassword, hashPassword } = require('../lib/password');
 
 const router = express.Router();
 const DUMMY_HASH = bcrypt.hashSync('timing-equaliser-not-a-real-password', 10);
 
+// v_homepage finds the owner (employee / civilian / company) through its username FK
 const USER_SQL = `
-  SELECT h.username, h.password, h.user_type, h.emp_id, h.citizen_id, h.license_no, h.is_active,
+  SELECT h.username, h.password, h.user_type, v.emp_id, v.citizen_id, v.license_no, h.is_active,
          v.display_name, v.employee_role
     FROM homepage h JOIN v_homepage v ON v.username = h.username
    WHERE h.username = :u`;
@@ -27,11 +29,6 @@ function toPrincipal(u) {
     ...(u.citizen_id ? { citizenId: u.citizen_id } : {}),
     ...(u.license_no ? { licenseNo: u.license_no } : {}),
   };
-}
-
-function checkPassword(pw) {
-  if (typeof pw !== 'string' || pw.length < 8 || !/[A-Za-z]/.test(pw) || !/\d/.test(pw))
-    throw badRequest('Password must be at least 8 characters and include a letter and a digit.');
 }
 
 router.post('/login', async (req, res) => {
@@ -50,10 +47,10 @@ router.post('/login', async (req, res) => {
   res.json({ token: sign(user), user });
 });
 
-/** Civilian self-registration: CIVILIAN + email/phone + HOMEPAGE in one transaction. */
+/** Civilian self-registration: HOMEPAGE + CIVILIAN (+ email/phone) in one transaction. */
 router.post('/register', async (req, res) => {
   const b = req.body || {};
-  const username = String(b.username || '').trim().toLowerCase();
+  const username = checkUsername(b.username);
   checkPassword(b.password);
 
   const civ = await describeTable('CIVILIAN');
@@ -63,9 +60,15 @@ router.post('/register', async (req, res) => {
   });
   const email = b.email ? coerceValue((await describeTable('CIVILIAN_EMAIL')).byName.email, b.email) : null;
   const phone = b.phone ? coerceValue((await describeTable('CIVILIAN_PHONE')).byName.phone_number, b.phone) : null;
-  const hash = await bcrypt.hash(b.password, 10);
+  const hash = await hashPassword(b.password);
+  row.username = username;
 
   const user = await withTransaction(async (conn) => {
+    // the login must exist first: CIVILIAN.username is a NOT NULL FK to it
+    await conn.execute(
+      `INSERT INTO homepage (username, password, user_type) VALUES (:u, :p, 'CIVILIAN')`,
+      { u: username, p: hash }
+    );
     const cols = Object.keys(row);
     const r = await conn.execute(
       `INSERT INTO civilian (${cols.join(', ')}) VALUES (${cols.map((c) => `:${c}_v`).join(', ')})
@@ -75,10 +78,6 @@ router.post('/register', async (req, res) => {
     const id = r.outBinds.id[0];
     if (email) await conn.execute(`INSERT INTO civilian_email VALUES (:id, :e)`, { id, e: email });
     if (phone) await conn.execute(`INSERT INTO civilian_phone VALUES (:id, :p)`, { id, p: phone });
-    await conn.execute(
-      `INSERT INTO homepage (username, password, user_type, citizen_id) VALUES (:u, :p, 'CIVILIAN', :id)`,
-      { u: username, p: hash, id }
-    );
     return toPrincipal(await queryOne(USER_SQL, { u: username }, conn));
   });
   res.status(201).json({ token: sign(user), user });
@@ -96,9 +95,9 @@ router.post('/change-password', authenticate, async (req, res) => {
   if (!u || !(await bcrypt.compare(String(currentPassword || ''), u.password)))
     throw badRequest('Current password is incorrect.');
   await execute(`UPDATE homepage SET password = :p WHERE username = :u`, {
-    p: await bcrypt.hash(newPassword, 10), u: req.user.username,
+    p: await hashPassword(newPassword), u: req.user.username,
   });
   res.json({ ok: true });
 });
 
-module.exports = { router, checkPassword };
+module.exports = { router };

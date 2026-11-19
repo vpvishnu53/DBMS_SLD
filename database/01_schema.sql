@@ -8,8 +8,13 @@
 --   * Derived attrs (age, work_experience, age_years, resolution_hours,
 --     total_cost) are NOT stored; they are computed in views (02_logic.sql).
 --     11g virtual columns cannot reference SYSDATE, hence views.
---   * HOMEPAGE is the login/account entity: exactly one of
---     emp_id / citizen_id / license_no is set (exclusive arc).
+--   * HOMEPAGE is the login/account entity. logs_into / registers_on /
+--     accesses are 1:1 with TOTAL participation of EMPLOYEE / CIVILIAN /
+--     COMPANY (diagram: || on the HOMEPAGE side), so the FK lives on the
+--     total side: <entity>.username NOT NULL UNIQUE -> HOMEPAGE.
+--   * resolves: one WORK_ORDER resolves 0..N complaints; a COMPLAINT is
+--     resolved by 0..1 work order -> COMPLAINT.work_order_id (nullable).
+--   * Mandatory 1-side (||) -> NOT NULL FK; optional (o|) -> nullable FK.
 --   * ENERGY_LOG is a WEAK entity identified by (pole_id, log_number).
 --   * WORK_ORDER "uses" SPARE_PARTS is M:N -> WORK_ORDER_PART.
 --   * 11g has no IDENTITY columns -> sequences + BEFORE INSERT triggers.
@@ -40,6 +45,22 @@ CREATE SEQUENCE seq_complaint   START WITH 90001 NOCACHE;
 CREATE SEQUENCE seq_work_order  START WITH 30001 NOCACHE;
 CREATE SEQUENCE seq_part        START WITH 501  NOCACHE;
 CREATE SEQUENCE seq_billing     START WITH 60001 NOCACHE;
+
+-- =====================================================================
+--  ACCOUNTS
+-- =====================================================================
+-- HOMEPAGE: every employee / civilian / company owns exactly one login.
+-- user_type says which table owns it; triggers in 02_logic.sql make sure
+-- the owning row's table matches user_type (so one login has one owner).
+CREATE TABLE homepage (
+  username      VARCHAR2(40)  CONSTRAINT pk_homepage PRIMARY KEY
+                CONSTRAINT ck_homepage_username CHECK (REGEXP_LIKE(username, '^[a-z0-9_.]{3,40}$')),
+  password      VARCHAR2(100) NOT NULL,           -- bcrypt hash, never plaintext
+  user_type     VARCHAR2(10)  NOT NULL CONSTRAINT ck_homepage_type CHECK (user_type IN ('EMPLOYEE','CIVILIAN','COMPANY')),
+  is_active     CHAR(1)       DEFAULT 'Y' NOT NULL CONSTRAINT ck_homepage_active CHECK (is_active IN ('Y','N')),
+  created_at    TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
+  last_login_at TIMESTAMP
+);
 
 -- =====================================================================
 --  ORGANISATION
@@ -73,6 +94,8 @@ CREATE TABLE employee (
   pincode         CHAR(6)       CONSTRAINT ck_employee_pincode CHECK (REGEXP_LIKE(pincode, '^[1-9][0-9]{5}$')),
   dept_id         NUMBER(6)     NOT NULL
                   CONSTRAINT fk_employee_dept REFERENCES department(dept_id),          -- employs (N:1)
+  username        VARCHAR2(40)  NOT NULL CONSTRAINT uq_employee_username UNIQUE
+                  CONSTRAINT fk_employee_login REFERENCES homepage(username),          -- logs_into (1:1, total)
   CONSTRAINT ck_employee_dates CHECK (date_of_joining > date_of_birth)
 );
 
@@ -100,7 +123,9 @@ CREATE TABLE civilian (
   street      VARCHAR2(120),
   city        VARCHAR2(60),
   state       VARCHAR2(60),
-  pincode     CHAR(6)      CONSTRAINT ck_civilian_pincode CHECK (REGEXP_LIKE(pincode, '^[1-9][0-9]{5}$'))
+  pincode     CHAR(6)      CONSTRAINT ck_civilian_pincode CHECK (REGEXP_LIKE(pincode, '^[1-9][0-9]{5}$')),
+  username    VARCHAR2(40) NOT NULL CONSTRAINT uq_civilian_username UNIQUE
+              CONSTRAINT fk_civilian_login REFERENCES homepage(username)                -- registers_on (1:1, total)
 );
 
 CREATE TABLE civilian_email (
@@ -127,34 +152,15 @@ CREATE TABLE company (
   street          VARCHAR2(120),
   city            VARCHAR2(60),
   state           VARCHAR2(60),
-  pincode         CHAR(6)       CONSTRAINT ck_company_pincode CHECK (REGEXP_LIKE(pincode, '^[1-9][0-9]{5}$'))
+  pincode         CHAR(6)       CONSTRAINT ck_company_pincode CHECK (REGEXP_LIKE(pincode, '^[1-9][0-9]{5}$')),
+  username        VARCHAR2(40)  NOT NULL CONSTRAINT uq_company_username UNIQUE
+                  CONSTRAINT fk_company_login REFERENCES homepage(username)            -- accesses (1:1, total)
 );
 
 CREATE TABLE company_phone (
   license_no VARCHAR2(20) NOT NULL CONSTRAINT fk_comp_phone_comp REFERENCES company(license_no) ON DELETE CASCADE,
   phone_no   VARCHAR2(15) NOT NULL CONSTRAINT ck_comp_phone CHECK (REGEXP_LIKE(phone_no, '^\+?[0-9]{10,14}$')),
   CONSTRAINT pk_company_phone PRIMARY KEY (license_no, phone_no)
-);
-
--- HOMEPAGE: logs_into (EMPLOYEE 1:0..1), registers_on (CIVILIAN 1:0..1), accesses (COMPANY 1:0..1)
-CREATE TABLE homepage (
-  username      VARCHAR2(40)  CONSTRAINT pk_homepage PRIMARY KEY
-                CONSTRAINT ck_homepage_username CHECK (REGEXP_LIKE(username, '^[a-z0-9_.]{3,40}$')),
-  password      VARCHAR2(100) NOT NULL,           -- bcrypt hash, never plaintext
-  user_type     VARCHAR2(10)  NOT NULL CONSTRAINT ck_homepage_type CHECK (user_type IN ('EMPLOYEE','CIVILIAN','COMPANY')),
-  emp_id        NUMBER(8)     CONSTRAINT fk_homepage_emp  REFERENCES employee(emp_id)     ON DELETE CASCADE,
-  citizen_id    NUMBER(8)     CONSTRAINT fk_homepage_civ  REFERENCES civilian(citizen_id) ON DELETE CASCADE,
-  license_no    VARCHAR2(20)  CONSTRAINT fk_homepage_comp REFERENCES company(license_no)  ON DELETE CASCADE,
-  is_active     CHAR(1)       DEFAULT 'Y' NOT NULL CONSTRAINT ck_homepage_active CHECK (is_active IN ('Y','N')),
-  created_at    TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
-  last_login_at TIMESTAMP,
-  CONSTRAINT uq_homepage_emp  UNIQUE (emp_id),
-  CONSTRAINT uq_homepage_civ  UNIQUE (citizen_id),
-  CONSTRAINT uq_homepage_comp UNIQUE (license_no),
-  CONSTRAINT ck_homepage_arc CHECK (
-       (user_type = 'EMPLOYEE' AND emp_id IS NOT NULL AND citizen_id IS NULL AND license_no IS NULL)
-    OR (user_type = 'CIVILIAN' AND citizen_id IS NOT NULL AND emp_id IS NULL AND license_no IS NULL)
-    OR (user_type = 'COMPANY'  AND license_no IS NOT NULL AND emp_id IS NULL AND citizen_id IS NULL))
 );
 
 -- =====================================================================
@@ -164,7 +170,7 @@ CREATE TABLE zone (
   zone_id     NUMBER(6)    CONSTRAINT pk_zone PRIMARY KEY,
   zone_name   VARCHAR2(80) NOT NULL CONSTRAINT uq_zone_name UNIQUE,
   city_region VARCHAR2(80) NOT NULL,
-  emp_id      NUMBER(8)    CONSTRAINT fk_zone_supervisor REFERENCES employee(emp_id) ON DELETE SET NULL  -- supervises
+  emp_id      NUMBER(8)    NOT NULL CONSTRAINT fk_zone_supervisor REFERENCES employee(emp_id)  -- supervises (exactly 1)
 );
 
 CREATE TABLE feeder_pillar (
@@ -220,21 +226,6 @@ CREATE TABLE energy_log (
 -- =====================================================================
 --  OPERATIONS
 -- =====================================================================
-CREATE TABLE complaint (
-  complaint_id       NUMBER(8)     CONSTRAINT pk_complaint PRIMARY KEY,
-  issue_category     VARCHAR2(20)  NOT NULL
-                     CONSTRAINT ck_complaint_cat CHECK (issue_category IN
-                       ('LIGHT_OUT','FLICKERING','DAY_BURNING','DAMAGED_POLE','EXPOSED_WIRING','OTHER')),
-  description        VARCHAR2(1000) NOT NULL,
-  ticket_status      VARCHAR2(12)  DEFAULT 'OPEN' NOT NULL
-                     CONSTRAINT ck_complaint_status CHECK (ticket_status IN
-                       ('OPEN','ASSIGNED','IN_PROGRESS','RESOLVED','CLOSED','REJECTED')),
-  reported_timestamp TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
-  citizen_id         NUMBER(8)     NOT NULL CONSTRAINT fk_complaint_civ   REFERENCES civilian(citizen_id),            -- submits
-  pole_id            NUMBER(8)     NOT NULL CONSTRAINT fk_complaint_light REFERENCES streetlight(pole_id),            -- receives
-  handled_by         NUMBER(8)     CONSTRAINT fk_complaint_emp REFERENCES employee(emp_id) ON DELETE SET NULL          -- handles
-);
-
 CREATE TABLE spare_parts (
   part_id           NUMBER(6)     CONSTRAINT pk_spare_parts PRIMARY KEY,
   part_name         VARCHAR2(100) NOT NULL CONSTRAINT uq_spare_parts_name UNIQUE,
@@ -253,12 +244,28 @@ CREATE TABLE work_order (
   created_timestamp    TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
   completion_timestamp TIMESTAMP,
   zone_id              NUMBER(6)     NOT NULL CONSTRAINT fk_wo_zone    REFERENCES zone(zone_id),                         -- scheduled_in
-  pole_id              NUMBER(8)     CONSTRAINT fk_wo_light   REFERENCES streetlight(pole_id),                           -- requires
-  complaint_id         NUMBER(8)     CONSTRAINT fk_wo_complaint REFERENCES complaint(complaint_id),                      -- resolves
-  emp_id               NUMBER(8)     CONSTRAINT fk_wo_emp     REFERENCES employee(emp_id) ON DELETE SET NULL,            -- assigned_to
-  license_no           VARCHAR2(20)  CONSTRAINT fk_wo_company REFERENCES company(license_no),                            -- executes
+  pole_id              NUMBER(8)     CONSTRAINT fk_wo_light   REFERENCES streetlight(pole_id),                           -- requires (0..1)
+  emp_id               NUMBER(8)     NOT NULL CONSTRAINT fk_wo_emp REFERENCES employee(emp_id),                          -- assigned_to (exactly 1)
+  license_no           VARCHAR2(20)  CONSTRAINT fk_wo_company REFERENCES company(license_no),                            -- executes (0..1)
   CONSTRAINT ck_wo_completion CHECK (completion_timestamp IS NULL OR completion_timestamp >= created_timestamp),
   CONSTRAINT ck_wo_completed_ts CHECK (status <> 'COMPLETED' OR completion_timestamp IS NOT NULL)
+);
+
+-- created after WORK_ORDER: a complaint points at the (0..1) work order that resolves it
+CREATE TABLE complaint (
+  complaint_id       NUMBER(8)     CONSTRAINT pk_complaint PRIMARY KEY,
+  issue_category     VARCHAR2(20)  NOT NULL
+                     CONSTRAINT ck_complaint_cat CHECK (issue_category IN
+                       ('LIGHT_OUT','FLICKERING','DAY_BURNING','DAMAGED_POLE','EXPOSED_WIRING','OTHER')),
+  description        VARCHAR2(1000) NOT NULL,
+  ticket_status      VARCHAR2(12)  DEFAULT 'OPEN' NOT NULL
+                     CONSTRAINT ck_complaint_status CHECK (ticket_status IN
+                       ('OPEN','ASSIGNED','IN_PROGRESS','RESOLVED','CLOSED','REJECTED')),
+  reported_timestamp TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
+  citizen_id         NUMBER(8)     NOT NULL CONSTRAINT fk_complaint_civ REFERENCES civilian(citizen_id),              -- submits (exactly 1)
+  pole_id            NUMBER(8)     CONSTRAINT fk_complaint_light REFERENCES streetlight(pole_id),                      -- receives (0..1)
+  handled_by         NUMBER(8)     CONSTRAINT fk_complaint_emp REFERENCES employee(emp_id) ON DELETE SET NULL,        -- handles (0..1)
+  work_order_id      NUMBER(8)     CONSTRAINT fk_complaint_wo REFERENCES work_order(work_order_id)                    -- resolves (0..1)
 );
 
 -- uses (M:N)
@@ -297,9 +304,9 @@ CREATE INDEX ix_complaint_civ      ON complaint(citizen_id);
 CREATE INDEX ix_complaint_light    ON complaint(pole_id);
 CREATE INDEX ix_complaint_emp      ON complaint(handled_by);
 CREATE INDEX ix_complaint_status   ON complaint(ticket_status);
+CREATE INDEX ix_complaint_wo       ON complaint(work_order_id);
 CREATE INDEX ix_wo_zone            ON work_order(zone_id);
 CREATE INDEX ix_wo_light           ON work_order(pole_id);
-CREATE INDEX ix_wo_complaint       ON work_order(complaint_id);
 CREATE INDEX ix_wo_emp             ON work_order(emp_id);
 CREATE INDEX ix_wo_company         ON work_order(license_no);
 CREATE INDEX ix_wo_status          ON work_order(status);

@@ -98,7 +98,7 @@ export default function CitizenPortal() {
                 <strong>#{c.complaint_id} · {enumLabel(c.issue_category)}</strong>
                 <span className="muted" style={{ fontSize: 12 }}>{timeAgo(c.reported_timestamp)}</span>
               </div>
-              <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>Pole {c.pole_id} · {c.zone_name} · filed {fmtDateTime(c.reported_timestamp)}</div>
+              <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{c.pole_id ? `Pole ${c.pole_id} · ${c.zone_name}` : "No streetlight named"} · filed {fmtDateTime(c.reported_timestamp)}</div>
               <p style={{ color: 'var(--text-2)', margin: '10px 0 14px' }}>{c.description}</p>
               <Progress status={c.ticket_status} />
               {c.resolution_notes && c.ticket_status === 'RESOLVED' && (

@@ -14,6 +14,7 @@ const { describeTable } = require('./schema');
 const { coerceRow, coerceValue, parsePaging } = require('./validate');
 const { badRequest, notFound, forbidden } = require('../middleware/errors');
 const { requireType, canWrite } = require('../middleware/auth');
+const { checkUsername, checkPassword, hashPassword } = require('./password');
 
 /** 11g has no OFFSET/FETCH: classic ROWNUM pagination. */
 function paginate(innerSql) {
@@ -27,7 +28,10 @@ class Resource {
    *  path, table, view, pk, autoPk, label (SQL expr over view cols),
    *  search: string[], sort: string, order: 'asc'|'desc',
    *  multi: { key: { table, fk, col } }, readOnly, writeRoles: string[],
-   *  exclude: string[] (never writable), title
+   *  exclude: string[] (never writable), title,
+   *  login: 'EMPLOYEE'|'CIVILIAN'|'COMPANY' -> the row owns exactly one HOMEPAGE
+   *         login (1:1, total participation): create takes username + password
+   *         and inserts the login in the same transaction; username is immutable.
    */
   constructor(def) {
     this.def = { autoPk: true, order: 'asc', search: [], multi: {}, writeRoles: [], exclude: [], ...def };
@@ -140,10 +144,23 @@ class Resource {
     const row = coerceRow(this.table, body, { writable: this.writable, creating: true });
     if (!this.def.autoPk && (row[this.def.pk] === undefined || row[this.def.pk] === null))
       throw badRequest(`${this.def.pk} is required.`);
+    // total participation in logs_into / registers_on / accesses: the row cannot
+    // exist without its login, so both are created in one transaction
+    let login = null;
+    if (this.def.login) {
+      login = { username: checkUsername(body.username), hash: await hashPassword(checkPassword(body.password)) };
+      row.username = login.username;
+    }
     const cols = Object.keys(row);
     const binds = Object.fromEntries(cols.map((c) => [`v_${c}`, row[c]]));
     binds.out_pk = { dir: oracledb.BIND_OUT, type: this.pkCol.type === 'number' ? oracledb.NUMBER : oracledb.STRING, maxSize: 200 };
     return withTransaction(async (conn) => {
+      if (login) {
+        await conn.execute(
+          `INSERT INTO homepage (username, password, user_type) VALUES (:u, :p, :t)`,
+          { u: login.username, p: login.hash, t: this.def.login }
+        );
+      }
       const r = await conn.execute(
         `INSERT INTO ${this.table.name} (${cols.join(', ')}) VALUES (${cols.map((c) => `:v_${c}`).join(', ')})
          RETURNING ${this.def.pk} INTO :out_pk`,
@@ -177,9 +194,15 @@ class Resource {
     });
   }
 
-  async remove(id) {
+  async remove(id, user) {
     const pk = this.pkValue(id);
     return withTransaction(async (conn) => {
+      if (this.def.login) {
+        // deleting the owner also deletes its login (trg_*_drop_login) -- never your own
+        const own = await queryOne(`SELECT username FROM ${this.table.name} WHERE ${this.def.pk} = :id`, { id: pk }, conn);
+        if (own && user && own.username === user.username)
+          throw badRequest('You cannot delete your own record while signed in with it.');
+      }
       const r = await conn.execute(`DELETE FROM ${this.table.name} WHERE ${this.def.pk} = :id`, { id: pk });
       if (!r.rowsAffected) throw notFound();
       return { deleted: pk };
@@ -204,6 +227,7 @@ class Resource {
       pk: this.def.pk,
       autoPk: this.def.autoPk,
       readOnly: !!this.def.readOnly,
+      login: this.def.login || null,
       canWrite: !this.def.readOnly && canWrite(user, this.def.writeRoles),
       search: this.def.search,
       fields,
@@ -226,7 +250,7 @@ class Resource {
       r.post('/', write, async (req, res) => res.status(201).json(await this.create(req.body || {})));
       r.put('/:id', write, async (req, res) => res.json(await this.update(req.params.id, req.body || {})));
       r.patch('/:id', write, async (req, res) => res.json(await this.update(req.params.id, req.body || {})));
-      r.delete('/:id', write, async (req, res) => res.json(await this.remove(req.params.id)));
+      r.delete('/:id', write, async (req, res) => res.json(await this.remove(req.params.id, req.user)));
     }
     return r;
   }

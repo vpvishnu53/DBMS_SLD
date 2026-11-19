@@ -13,7 +13,7 @@ EndSem/
 ├── database/          Phase 1 – Oracle schema, PL/SQL, seed data
 │   ├── 00_create_user.sql   creates schema user SLMS (run as SYSDBA)
 │   ├── 01_schema.sql        20 tables, 11 sequences, constraints, indexes
-│   ├── 02_logic.sql         16 triggers, 3 functions, 2 procedures, 15 views
+│   ├── 02_logic.sql         22 triggers, 3 functions, 3 procedures, 15 views
 │   ├── 03_seed.sql          Bengaluru demo data (48 poles, 288 energy logs, …)
 │   ├── 99_verify.sql        sanity report
 │   └── setup.ps1            one-command (re)build
@@ -43,7 +43,7 @@ cd backend && npm install && npm run dev
 cd frontend && npm install && npm run dev
 ```
 
-**4. Optional:** run the end-to-end API test (40 checks) while the API is running:
+**4. Optional:** run the end-to-end API test (54 checks) while the API is running:
 ```bash
 cd backend && npm run test:smoke
 ```
@@ -51,7 +51,7 @@ cd backend && npm run test:smoke
 ### Demo logins (password for all: `Password@123`)
 | Username | Who | Sees |
 |---|---|---|
-| `admin` | Ananya Rao, ADMIN | everything, incl. user accounts |
+| `admin` | Ananya Rao, ADMIN | everything, incl. logins |
 | `karthik.menon` | Zone supervisor | ops + infrastructure write access |
 | `suresh.kumar` | Technician | work orders, parts, energy readings |
 | `vikram.shetty` | Accountant | billing, companies, spare parts |
@@ -70,8 +70,9 @@ cd backend && npm run test:smoke
 | Multivalued attrs: email, phone_number, phone_no | Child tables `EMPLOYEE_EMAIL`, `EMPLOYEE_PHONE`, `CIVILIAN_EMAIL`, `CIVILIAN_PHONE`, `COMPANY_PHONE` |
 | Derived attrs: age, work_experience, age_years, resolution_hours, total_cost | Computed in views `V_EMPLOYEE`, `V_STREETLIGHT`, `V_WORK_ORDER`, `V_SPARE_PARTS` (11g virtual columns can't use SYSDATE) |
 | Weak entity ENERGY_LOG, identifying rel. *records* | PK `(pole_id, log_number)`, `ON DELETE CASCADE`; `log_number` allocated by `sp_record_energy` |
-| HOMEPAGE (*logs_into / registers_on / accesses*) | Login table; an **exclusive-arc CHECK** ensures exactly one of `emp_id / citizen_id / license_no`, each `UNIQUE` (1 : 0..1) |
-| 1:N relationships (employs, supervises, contains, located_in, powers, deployed_in, has, submits, receives, handles, scheduled_in, requires, resolves, assigned_to, executes) | FK on the "many" side |
+| HOMEPAGE (*logs_into / registers_on / accesses*) | Login table. Each relationship is 1:1 with **total participation** of EMPLOYEE / CIVILIAN / COMPANY (`||` next to HOMEPAGE), so the FK sits on that side: `<entity>.username NOT NULL UNIQUE`. A trigger checks the owner's table matches `user_type`; deleting the owner deletes its login |
+| 1:N relationships (employs, supervises, contains, located_in, powers, deployed_in, has, submits, receives, handles, scheduled_in, requires, resolves, assigned_to, executes) | FK on the "many" side: `NOT NULL` where the diagram shows `||` (exactly one), nullable where it shows `o|` (zero or one) |
+| *resolves* (WORK_ORDER 0..1 : 0..N COMPLAINT) | `complaint.work_order_id`: one work order can resolve many complaints about the same pole |
 | M:N *uses* (WORK_ORDER–SPARE_PARTS) | Junction table `WORK_ORDER_PART(quantity_used)` |
 | *generates* (WORK_ORDER 1 : 0..1 BILLING) | `billing.work_order_id` FK + `UNIQUE` |
 
@@ -84,12 +85,15 @@ cd backend && npm run test:smoke
 - A pole's feeder pillar must be in the same zone.
 - A sensor's zone must match its pole.
 - A new complaint flips its light to FAULTY.
-- A work-order status change cascades to the streetlight (UNDER_MAINTENANCE / FUNCTIONAL, `last_serviced_date`) and to the complaint (ASSIGNED / IN_PROGRESS / RESOLVED).
+- A work-order status change cascades to the streetlight (UNDER_MAINTENANCE / FUNCTIONAL, `last_serviced_date`) and to **every** complaint it resolves (ASSIGNED / IN_PROGRESS / RESOLVED). Cancelling unlinks and reopens them.
+- Linking a complaint to a work order sets its ticket status from that work order.
+- A login can only be owned by a row of the matching type, and deleting an employee, civilian or company deletes its login (compound triggers).
 - Adding or removing parts debits or credits stock, and raises `ORA-20010` when stock is insufficient.
 
 **PL/SQL:**
 - **Procedures:**
-  - `sp_complaint_to_work_order` turns a complaint into a work order atomically, refusing duplicates.
+  - `sp_complaint_to_work_order` turns a complaint into a work order atomically. It requires an employee and also attaches the other open complaints about the same pole.
+  - `sp_assert_login` checks that a login belongs to the right kind of owner.
   - `sp_record_energy` records a reading: it allocates the weak-entity key under a row lock and computes the cost.
 - **Functions:** `fn_work_order_parts_cost`, `fn_zone_energy_cost`, `fn_years_since`.
 
@@ -117,11 +121,11 @@ cd backend && npm run test:smoke
 | `GET /api/meta`, `GET /api/lookups/:resource` | introspected metadata, FK dropdown options |
 | `GET/POST/PUT/PATCH/DELETE /api/{departments, employees, civilians, companies, zones, feeder-pillars, streetlights, sensors, complaints, work-orders, spare-parts, billing}` | CRUD with `?page&pageSize&q&sort&order&<column>=value[,value]` |
 | `GET /api/energy-logs`, `POST /api/energy-logs`, `DELETE /api/energy-logs/:pole/:log` | weak entity via `sp_record_energy` |
-| `POST /api/complaints/:id/work-order` | `sp_complaint_to_work_order` |
+| `POST /api/complaints/:id/work-order` | `sp_complaint_to_work_order`; `emp_id` required; returns `linked_complaints` |
 | `GET/POST/PUT/DELETE /api/work-orders/:id/parts[/:partId]` | M:N *uses*, stock trigger |
 | `GET /api/streetlights/:id/{energy-logs,sensors,complaints,work-orders}` | drill-downs |
 | `GET /api/dashboard`, `GET /api/reports[/:id]` | aggregates: zone energy, lamp efficiency, workforce, contractor scorecard, budget overruns, ageing lights |
-| `GET/POST/PATCH/DELETE /api/users` | HOMEPAGE admin (ADMIN only) |
+| `GET/PATCH /api/users` | list logins, enable/disable, reset password (ADMIN only). Logins are created by `POST /api/employees` / `civilians` / `companies` (with `username` + `password`) and deleted with their owner |
 | `/api/portal/citizen/*`, `/api/portal/company/*` | self-service portals |
 
 ## Phase 3 — Frontend (`frontend/`)
@@ -136,7 +140,7 @@ cd backend && npm run test:smoke
   - work-order workflow and parts
   - complaint → dispatch
   - streetlight drill-downs
-  - user accounts
+  - logins (enable/disable, reset password)
   - citizen portal: report a fault, track progress
   - contractor portal: start/complete jobs, billing
 - **Charts** use a palette checked with a colour-vision-deficiency (colour-blindness) validator against the black surface. Status colours always come with a text label.
