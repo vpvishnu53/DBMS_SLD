@@ -9,7 +9,7 @@ const { HttpError, badRequest } = require('../middleware/errors');
 const { describeTable } = require('../lib/schema');
 const { coerceRow, coerceValue } = require('../lib/validate');
 const { checkUsername, checkPassword, hashPassword } = require('../lib/password');
-const { issueOtp, checkOtp, consumeOtp } = require('../lib/otp');
+const { issueOtp, checkOtp, consumeOtp, otpDelivery } = require('../lib/otp');
 
 const router = express.Router();
 const DUMMY_HASH = bcrypt.hashSync('timing-equaliser-not-a-real-password', 10);
@@ -47,6 +47,9 @@ router.post('/login', async (req, res) => {
   const user = toPrincipal(u);
   res.json({ token: sign(user), user });
 });
+
+/** Lets the sign-up page say up front if codes can't be sent ('email' | 'dev' | 'off'). */
+router.get('/otp/config', (_req, res) => res.json({ delivery: otpDelivery() }));
 
 /** Step 1 of sign-up: email a 6-digit code to prove the citizen owns the address. */
 router.post('/otp/request', async (req, res) => {

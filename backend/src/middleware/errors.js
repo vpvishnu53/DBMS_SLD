@@ -91,10 +91,12 @@ function errorHandler(err, req, res, _next) {
   if (!(e instanceof HttpError) && e && typeof e.errorNum === 'number') e = mapOracleError(e) || e;
   if (e && e.type === 'entity.parse.failed') e = badRequest('Malformed JSON body.');
 
-  const status = e instanceof HttpError ? e.status : 500;
-  if (status >= 500) console.error('[error]', err);
+  const known = e instanceof HttpError; // thrown on purpose, message is safe to show
+  const status = known ? e.status : 500;
+  if (!known) console.error('[error]', err);
+  else if (status >= 500) console.warn(`[${status}] ${e.message}`);
   res.status(status).json({
-    error: status >= 500 ? 'Internal server error' : e.message,
+    error: known ? e.message : 'Internal server error',
     ...(e.details ? { details: e.details } : {}),
   });
 }

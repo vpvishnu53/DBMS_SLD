@@ -34,6 +34,11 @@ export default function RegisterPage() {
   const [sending, setSending] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [delivery, setDelivery] = useState(null); // 'email' | 'dev' | 'off' (from the API)
+
+  useEffect(() => {
+    api('/auth/otp/config').then((c) => setDelivery(c.delivery)).catch(() => setDelivery(null));
+  }, []);
 
   useEffect(() => {
     if (cooldown <= 0) return undefined;
@@ -82,25 +87,25 @@ export default function RegisterPage() {
                   <input id="email" className="input" type="email" required value={email} autoComplete="email"
                     onChange={(e) => { setEmail(e.target.value); setSent(null); setOtp(''); }} placeholder="you@example.com" />
                   <button type="button" className="btn" style={{ height: 38 }} onClick={sendCode}
-                    disabled={sending || cooldown > 0 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)}>
+                    disabled={sending || cooldown > 0 || delivery === 'off' || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)}>
                     {sending ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : sent ? 'Resend code' : 'Send code'}
                   </button>
                 </div>
               </div>
 
+              {delivery === 'off' && (
+                <div className="alert alert-error" style={{ margin: '10px 0 0' }}>
+                  Sign-up emails aren&apos;t set up on the server yet, so verification codes can&apos;t be sent.
+                </div>
+              )}
+
               {sent && (
                 <>
                   <p className="muted" style={{ fontSize: 12.5, margin: '10px 0' }}>
                     {sent.delivery === 'email'
-                      ? <>We emailed a 6-digit code to <strong style={{ color: 'var(--text)' }}>{sent.email}</strong>. It expires in {sent.expiresInMinutes} minutes.</>
-                      : <>Code created for <strong style={{ color: 'var(--text)' }}>{sent.email}</strong>. It expires in {sent.expiresInMinutes} minutes.</>}
+                      ? <>We emailed a 6-digit code to <strong style={{ color: 'var(--text)' }}>{sent.email}</strong>. Check your inbox (and the spam folder). It expires in {sent.expiresInMinutes} minutes.</>
+                      : <>Dev mode: no email was sent. The code for <strong style={{ color: 'var(--text)' }}>{sent.email}</strong> is printed in the API terminal.</>}
                   </p>
-                  {sent.devCode && (
-                    <div className="alert alert-info" style={{ marginBottom: 10 }}>
-                      <strong>Dev mode:</strong> email isn&apos;t configured on the server yet, so the code is shown here
-                      (and in the API terminal): <span className="mono pink" style={{ fontSize: 15, letterSpacing: 2 }}>{sent.devCode}</span>
-                    </div>
-                  )}
                   <div className="field" style={{ maxWidth: 220 }}>
                     <label htmlFor="otp">Verification code<span className="req">*</span></label>
                     <input id="otp" className="input mono" inputMode="numeric" autoComplete="one-time-code" maxLength={6}

@@ -2,7 +2,8 @@ require('dotenv').config({ quiet: true });
 const { initPool, closePool } = require('./config/db');
 const { buildRegistry } = require('./resources');
 const { createApp } = require('./app');
-const { mailConfigured } = require('./lib/mailer');
+const { verifyMailer, smtpHint } = require('./lib/mailer');
+const { otpDelivery } = require('./lib/otp');
 
 async function main() {
   for (const k of ['DB_USER', 'DB_PASSWORD', 'DB_CONNECT_STRING', 'JWT_SECRET']) {
@@ -14,7 +15,17 @@ async function main() {
   const port = Number(process.env.PORT || 5000);
   const server = app.listen(port, () => {
     console.log(`SLMS API listening on http://localhost:${port}/api  (${registry.resources.length} resources)`);
-    console.log(mailConfigured() ? `Sign-up codes: sent by email via ${process.env.SMTP_HOST}` : 'Sign-up codes: DEV mode (no SMTP set) - codes are printed here and shown on the sign-up page');
+    const mode = otpDelivery();
+    if (mode === 'email') {
+      verifyMailer()
+        .then(() => console.log(`Sign-up codes: emailed from ${process.env.SMTP_USER} via ${process.env.SMTP_HOST} (SMTP login OK)`))
+        .catch((e) => console.error(`Sign-up codes: SMTP login FAILED - ${e.message}
+  ${smtpHint(e)}`));
+    } else if (mode === 'dev') {
+      console.log('Sign-up codes: DEV mode (OTP_DEV_MODE=true) - codes are printed in this terminal, no email is sent');
+    } else {
+      console.warn('Sign-up codes: NOT SET UP - fill SMTP_USER / SMTP_PASS in backend/.env (see README), then restart');
+    }
   });
 
   const shutdown = async (sig) => {

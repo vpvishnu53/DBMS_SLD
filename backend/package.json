@@ -8,7 +8,8 @@
     "dev": "nodemon --watch src src/server.js",
     "db:ping": "node scripts/ping-db.js",
     "db:setup": "powershell -ExecutionPolicy Bypass -File ../database/setup.ps1",
-    "test:smoke": "node scripts/smoke.js"
+    "test:smoke": "node scripts/smoke.js",
+    "mail:test": "node scripts/mail-test.js"
   },
   "keywords": [],
   "author": "",

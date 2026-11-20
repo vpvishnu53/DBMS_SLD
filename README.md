@@ -43,7 +43,7 @@ cd backend && npm install && npm run dev
 cd frontend && npm install && npm run dev
 ```
 
-**4. Optional:** run the end-to-end API test (61 checks) while the API is running:
+**4. Optional:** run the end-to-end API test (58 checks; 65 with `OTP_DEV_MODE=true` and SMTP empty) while the API is running:
 ```bash
 cd backend && npm run test:smoke
 ```
@@ -63,15 +63,23 @@ The other staff logins (`priya.nair`, `rahul.gowda`, `deepa.k`, `m.irfan`, `laks
 The database starts with **no complaints, work orders or bills**. They are created live through the site; the smoke test (step 4) adds some, so run step 1 again afterwards for a clean demo.
 
 ### Email verification for citizen sign-up (OTP)
-A new citizen must prove they own their email before the account is created:
-1. The sign-up page sends a 6-digit code (`POST /api/auth/otp/request`). Only an HMAC of the code is stored, in the `EMAIL_OTP` table.
-2. The account is created only if the code matches (`POST /api/auth/register`). The code is marked used in the same transaction.
+A new citizen must prove they own a real email address before the account is created:
+1. The address must look valid **and its domain must accept mail** (DNS MX lookup), so made-up addresses are refused.
+2. The sign-up page asks for a 6-digit code, which is **emailed** to that address (`POST /api/auth/otp/request`). Only an HMAC of the code is stored, in the `EMAIL_OTP` table. The code is never shown on the website.
+3. The account is created only if the code matches (`POST /api/auth/register`). The code is marked used in the same transaction.
 
-Limits: the code expires in 10 minutes; one code per 60 s; 5 codes per hour per email; 5 wrong tries per code; an email that already has an account can't request one.
+Limits: the code expires in 10 minutes; one code per 60 s; 5 codes per hour per email; 5 wrong tries per code; an email that already has an account can't request one. Citizens created by staff (Civilians → New) don't need a code.
 
-- **Dev mode (default):** with `SMTP_*` empty in `backend/.env`, no email is sent. The code is printed in the API terminal and shown on the sign-up page, so the flow works offline for demos.
-- **Real email:** fill in `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` (and optionally `MAIL_FROM`) in `backend/.env`, then restart the API. For Gmail: turn on 2-Step Verification, create an **App Password** (Google Account → Security → App passwords), and use `smtp.gmail.com`, port `465`, `SMTP_SECURE=true`, your Gmail address and the 16-character app password. The API's start-up line says which mode is active.
-- Email was chosen over phone because sending SMS in India needs a paid gateway and DLT template registration.
+**Set up sending (once):** codes are sent from a Gmail account using an App Password.
+1. On the Gmail account that should send the codes, turn on **2-Step Verification**.
+2. Open https://myaccount.google.com/apppasswords, create an app password (any name, for example "Lumina") and copy the 16 characters.
+3. In `backend/.env` set `SMTP_USER=<that gmail address>` and `SMTP_PASS=<the 16 characters>`. Host, port and security are already filled in for Gmail.
+4. Check it: `cd backend && npm run mail:test -- you@gmail.com`. It logs in and sends a sample code email.
+5. Restart the API. Its start-up line should say `Sign-up codes: emailed from … (SMTP login OK)`.
+
+Until this is done, the sign-up page says sign-up emails aren't set up. Other SMTP providers work too: change `SMTP_HOST`, `SMTP_PORT` and `SMTP_SECURE` (465 → `true`, 587 → `false`).
+For an offline demo only, `OTP_DEV_MODE=true` (with `SMTP_USER`/`SMTP_PASS` empty) prints codes in the API terminal instead of emailing them.
+Email was chosen over phone because sending SMS in India needs a paid gateway and DLT template registration.
 
 ---
 

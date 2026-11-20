@@ -1,7 +1,7 @@
 /**
- * Outgoing email (verification codes). Configure SMTP in backend/.env.
- * Without SMTP settings the API runs in DEV mode: codes are printed to the
- * API console and returned to the sign-up page so the flow can be demoed offline.
+ * Outgoing email (sign-up verification codes). Configure SMTP in backend/.env
+ * (SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, MAIL_FROM).
+ * Check the settings with:  npm run mail:test -- you@example.com
  */
 const nodemailer = require('nodemailer');
 
@@ -35,4 +35,17 @@ async function sendOtpEmail(to, code, minutes) {
   });
 }
 
-module.exports = { mailConfigured, sendOtpEmail };
+/** Log in to the SMTP server without sending anything (throws on bad settings). */
+const verifyMailer = () => getTransport().verify();
+
+/** Turn common SMTP failures into a hint a person can act on. */
+function smtpHint(err) {
+  const m = `${err.code || ''} ${err.responseCode || ''} ${err.message || ''}`;
+  if (/535|EAUTH|Username and Password not accepted|BadCredentials/i.test(m))
+    return 'Login rejected. For Gmail you need 2-Step Verification ON and a 16-character App Password in SMTP_PASS (not your normal password).';
+  if (/ETIMEDOUT|ECONNREFUSED|ENOTFOUND|ESOCKET|ECONNECTION/i.test(m))
+    return 'Could not reach the SMTP server. Check SMTP_HOST/SMTP_PORT/SMTP_SECURE and your internet connection (465 = SECURE true, 587 = SECURE false).';
+  return '';
+}
+
+module.exports = { mailConfigured, sendOtpEmail, verifyMailer, smtpHint };

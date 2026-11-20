@@ -10,21 +10,54 @@
  * sends, 5 sends per hour per email, 5 wrong attempts per code.
  */
 const crypto = require('crypto');
+const dns = require('dns').promises;
 const { queryOne, execute, oracledb } = require('../config/db');
 const { HttpError, badRequest } = require('../middleware/errors');
-const { mailConfigured, sendOtpEmail } = require('./mailer');
+const { mailConfigured, sendOtpEmail, smtpHint } = require('./mailer');
 
 const TTL_MINUTES = 10;
 const COOLDOWN_SECONDS = 60;
 const MAX_PER_HOUR = 5;
 const MAX_ATTEMPTS = 5;
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+// local@domain.tld: usual local-part characters, real-looking domain labels, letters-only TLD (2+)
+const EMAIL_RE = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/;
 const NOW = 'CAST(SYSTIMESTAMP AS TIMESTAMP)'; // server-local, same as the column defaults
+
+/**
+ * How codes are delivered:
+ *   'email' -> SMTP is configured: codes are emailed (the normal mode)
+ *   'dev'   -> no SMTP but OTP_DEV_MODE=true: code printed in the API terminal only
+ *   'off'   -> neither: sign-up codes cannot be sent
+ * The code itself is never shown on the website.
+ */
+function otpDelivery() {
+  if (mailConfigured()) return 'email';
+  if (process.env.OTP_DEV_MODE === 'true' && process.env.NODE_ENV !== 'production') return 'dev';
+  return 'off';
+}
 
 function normEmail(raw) {
   const email = String(raw ?? '').trim().toLowerCase();
-  if (!EMAIL_RE.test(email) || email.length > 120) throw badRequest('Enter a valid email address.');
+  const local = email.split('@')[0] || '';
+  if (!EMAIL_RE.test(email) || email.length > 120 || local.length > 64)
+    throw badRequest('Enter a valid email address, like name@gmail.com.');
   return email;
+}
+
+/** The domain must publish mail servers (MX), so made-up addresses are refused. */
+async function assertDomainAcceptsMail(email) {
+  const domain = email.split('@')[1];
+  try {
+    const mx = await dns.resolveMx(domain);
+    const real = mx.filter((r) => r.exchange && r.exchange !== '.'); // "0 ." = null MX: domain takes no mail
+    if (!real.length) throw badRequest(`${domain} does not accept email. Check the address.`);
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
+    if (['ENOTFOUND', 'ENODATA', 'ENODOMAIN', 'ENONAME'].includes(err.code))
+      throw badRequest(`${domain} does not accept email. Check the address.`);
+    // DNS itself failed (offline, timeout): don't block sign-up for that
+    console.warn(`[otp] MX lookup for ${domain} failed (${err.code}); allowing`);
+  }
 }
 
 const hashCode = (email, code) =>
@@ -32,9 +65,10 @@ const hashCode = (email, code) =>
 
 async function issueOtp(rawEmail) {
   const email = normEmail(rawEmail);
-  const devMode = !mailConfigured();
-  if (devMode && process.env.NODE_ENV === 'production')
-    throw new HttpError(503, 'Email delivery is not configured on the server.');
+  const delivery = otpDelivery();
+  if (delivery === 'off')
+    throw new HttpError(503, 'Sign-up emails are not set up on the server yet. Ask the administrator to add the SMTP settings.');
+  await assertDomainAcceptsMail(email);
 
   const taken = await queryOne(`SELECT 1 AS x FROM civilian_email WHERE LOWER(email) = :e`, { e: email });
   if (taken) throw new HttpError(409, 'An account with this email already exists. Sign in instead.');
@@ -60,23 +94,24 @@ async function issueOtp(rawEmail) {
   );
   const otpId = r.outBinds.id[0];
 
-  if (devMode) {
-    console.log(`[otp] DEV MODE (no SMTP configured): code for ${email} is ${code}`);
+  if (delivery === 'dev') {
+    console.log(`[otp] DEV MODE (no email sent): code for ${email} is ${code}`);
   } else {
     try {
       await sendOtpEmail(email, code, TTL_MINUTES);
     } catch (err) {
-      console.error('[otp] email send failed:', err.message);
+      console.error('[otp] email send failed:', err.message, smtpHint(err));
       await execute(`DELETE FROM email_otp WHERE otp_id = :id`, { id: otpId });
-      throw new HttpError(502, 'Could not send the verification email. Check the address or try again later.');
+      throw new HttpError(502, 'Could not send the verification email right now. Check the address or try again in a minute.');
     }
   }
   return {
     email,
     expiresInMinutes: TTL_MINUTES,
     resendAfterSeconds: COOLDOWN_SECONDS,
-    delivery: devMode ? 'dev' : 'email',
-    ...(devMode ? { devCode: code } : {}),
+    delivery,
+    // only for the automated test in dev mode; the website never displays it
+    ...(delivery === 'dev' ? { devCode: code } : {}),
   };
 }
 
@@ -114,4 +149,4 @@ async function consumeOtp(conn, otpId) {
   if (!r.rowsAffected) throw badRequest('This code was already used. Request a new one.');
 }
 
-module.exports = { issueOtp, checkOtp, consumeOtp, TTL_MINUTES };
+module.exports = { issueOtp, checkOtp, consumeOtp, otpDelivery, TTL_MINUTES };
