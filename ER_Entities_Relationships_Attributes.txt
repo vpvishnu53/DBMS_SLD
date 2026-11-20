@@ -257,10 +257,11 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
  PART B - THE WEBSITE / ORACLE DATABASE (what was actually built)
 #####################################################################
 
- The ER diagram is mapped to 20 Oracle tables in schema SLMS:
+ The ER diagram is mapped to 21 Oracle tables in schema SLMS:
    - 14 tables for the entity sets
    - 5 tables for multivalued attributes
    - 1 junction table for the M:N relationship "uses"
+   - 1 implementation table, EMAIL_OTP (sign-up verification codes; not an ER entity)
 
  Mapping rules used:
    * Composite attributes are flattened into plain columns
@@ -348,7 +349,17 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       dept_name  VARCHAR2(100)  UQ, NN
       dept_type  VARCHAR2(30)   NN
 
- 9. EMPLOYEE
+ 9. EMAIL_OTP
+      otp_id       NUMBER(10)     PK
+      email        VARCHAR2(120)  NN
+      code_hash    VARCHAR2(64)   NN
+      purpose      VARCHAR2(12)   NN
+      attempts     NUMBER(2)      NN
+      created_at   TIMESTAMP(6)   NN
+      expires_at   TIMESTAMP(6)   NN
+      consumed_at  TIMESTAMP(6)
+
+10. EMPLOYEE
       emp_id           NUMBER(8)      PK
       first_name       VARCHAR2(50)   NN
       middle_name      VARCHAR2(50)
@@ -366,17 +377,17 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       dept_id          NUMBER(6)      FK -> DEPARTMENT.dept_id, NN
       username         VARCHAR2(40)   FK -> HOMEPAGE.username, UQ, NN
 
-10. EMPLOYEE_EMAIL
+11. EMPLOYEE_EMAIL
       emp_id  NUMBER(8)      PK, FK -> EMPLOYEE.emp_id
       email   VARCHAR2(120)  PK, UQ
       (composite primary key: emp_id, email)
 
-11. EMPLOYEE_PHONE
+12. EMPLOYEE_PHONE
       emp_id        NUMBER(8)     PK, FK -> EMPLOYEE.emp_id
       phone_number  VARCHAR2(15)  PK
       (composite primary key: emp_id, phone_number)
 
-12. ENERGY_LOG
+13. ENERGY_LOG
       pole_id         NUMBER(8)     PK, FK -> STREETLIGHT.pole_id
       log_number      NUMBER(6)     PK
       reading_date    DATE          NN
@@ -385,14 +396,14 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       (composite primary key: pole_id, log_number)
       (unique together: pole_id, reading_date)
 
-13. FEEDER_PILLAR
+14. FEEDER_PILLAR
       cabinet_id          NUMBER(6)     PK
       installation_date   DATE          NN
       operational_status  VARCHAR2(20)  NN
       power_rating_kva    NUMBER(6,2)   NN
       zone_id             NUMBER(6)     FK -> ZONE.zone_id, NN
 
-14. HOMEPAGE
+15. HOMEPAGE
       username       VARCHAR2(40)   PK
       password       VARCHAR2(100)  NN
       user_type      VARCHAR2(10)   NN
@@ -400,7 +411,7 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       created_at     TIMESTAMP(6)   NN
       last_login_at  TIMESTAMP(6)
 
-15. SENSOR
+16. SENSOR
       sensor_id           NUMBER(8)     PK
       sensor_type         VARCHAR2(20)  NN
       manufacturer        VARCHAR2(80)
@@ -410,13 +421,13 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       zone_id             NUMBER(6)     FK -> ZONE.zone_id, NN
       pole_id             NUMBER(8)     FK -> STREETLIGHT.pole_id, NN
 
-16. SPARE_PARTS
+17. SPARE_PARTS
       part_id            NUMBER(6)      PK
       part_name          VARCHAR2(100)  UQ, NN
       unit_price         NUMBER(10,2)   NN
       quantity_in_stock  NUMBER(8)      NN
 
-17. STREETLIGHT
+18. STREETLIGHT
       pole_id             NUMBER(8)     PK
       current_status      VARCHAR2(20)  NN
       lamp_type           VARCHAR2(20)  NN
@@ -429,7 +440,7 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       zone_id             NUMBER(6)     FK -> ZONE.zone_id, NN
       cabinet_id          NUMBER(6)     FK -> FEEDER_PILLAR.cabinet_id, NN
 
-18. WORK_ORDER
+19. WORK_ORDER
       work_order_id         NUMBER(8)       PK
       work_type             VARCHAR2(20)    NN
       status                VARCHAR2(12)    NN
@@ -441,13 +452,13 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
       emp_id                NUMBER(8)       FK -> EMPLOYEE.emp_id, NN
       license_no            VARCHAR2(20)    FK -> COMPANY.license_no
 
-19. WORK_ORDER_PART
+20. WORK_ORDER_PART
       work_order_id  NUMBER(8)  PK, FK -> WORK_ORDER.work_order_id
       part_id        NUMBER(6)  PK, FK -> SPARE_PARTS.part_id
       quantity_used  NUMBER(6)  NN
       (composite primary key: work_order_id, part_id)
 
-20. ZONE
+21. ZONE
       zone_id      NUMBER(6)     PK
       zone_name    VARCHAR2(80)  UQ, NN
       city_region  VARCHAR2(80)  NN
@@ -471,6 +482,9 @@ SUMMARY:  14 entity sets (13 strong + 1 weak),  21 relationship sets
    HOMEPAGE.created_at       account creation time
    HOMEPAGE.last_login_at    last successful sign-in
    WORK_ORDER_PART.quantity_used   how many of a part a work order used
+   EMAIL_OTP (whole table)   one-time codes that verify a new citizen's email before
+                             the account is created; stores only an HMAC of the code,
+                             with expiry, attempt count and when it was used
    Foreign-key columns that store the relationships (listed in A2).
    Child tables for the multivalued attributes (EMPLOYEE_EMAIL, etc.).
 

@@ -12,9 +12,9 @@ EndSem/
 ├── ER_Diagram-DBMS.png
 ├── database/          Phase 1 – Oracle schema, PL/SQL, seed data
 │   ├── 00_create_user.sql   creates schema user SLMS (run as SYSDBA)
-│   ├── 01_schema.sql        20 tables, 11 sequences, constraints, indexes
-│   ├── 02_logic.sql         22 triggers, 3 functions, 3 procedures, 15 views
-│   ├── 03_seed.sql          Bengaluru demo data (48 poles, 288 energy logs, …)
+│   ├── 01_schema.sql        21 tables, 12 sequences, constraints, indexes
+│   ├── 02_logic.sql         23 triggers, 3 functions, 3 procedures, 15 views
+│   ├── 03_seed.sql          Bengaluru demo data: staff, contractors, 48 poles, 288 energy logs; no complaints yet
 │   ├── 99_verify.sql        sanity report
 │   └── setup.ps1            one-command (re)build
 ├── backend/           Phase 2 – REST API (Express 5, node-oracledb 6, JWT)
@@ -43,7 +43,7 @@ cd backend && npm install && npm run dev
 cd frontend && npm install && npm run dev
 ```
 
-**4. Optional:** run the end-to-end API test (54 checks) while the API is running:
+**4. Optional:** run the end-to-end API test (61 checks) while the API is running:
 ```bash
 cd backend && npm run test:smoke
 ```
@@ -56,8 +56,22 @@ cd backend && npm run test:smoke
 | `suresh.kumar` | Technician | work orders, parts, energy readings |
 | `vikram.shetty` | Accountant | billing, companies, spare parts |
 | `sneha.k` | Support agent | complaints, civilians |
-| `rohan.desai`, `fatima.sheikh`, `kavya.shenoy` | Citizens | citizen portal |
-| `lumen`, `brightpath` | Contractor companies | contractor portal |
+| `rohan.desai` | Citizen | citizen portal (new citizens sign up with an email code) |
+| `lumen`, `brightpath`, `deccanpower`, `nammalights` | Contractor companies | contractor portal |
+
+The other staff logins (`priya.nair`, `rahul.gowda`, `deepa.k`, `m.irfan`, `lakshmi.hegde`, `arjun.reddy`, `meera.iyer`) use the same password.
+The database starts with **no complaints, work orders or bills**. They are created live through the site; the smoke test (step 4) adds some, so run step 1 again afterwards for a clean demo.
+
+### Email verification for citizen sign-up (OTP)
+A new citizen must prove they own their email before the account is created:
+1. The sign-up page sends a 6-digit code (`POST /api/auth/otp/request`). Only an HMAC of the code is stored, in the `EMAIL_OTP` table.
+2. The account is created only if the code matches (`POST /api/auth/register`). The code is marked used in the same transaction.
+
+Limits: the code expires in 10 minutes; one code per 60 s; 5 codes per hour per email; 5 wrong tries per code; an email that already has an account can't request one.
+
+- **Dev mode (default):** with `SMTP_*` empty in `backend/.env`, no email is sent. The code is printed in the API terminal and shown on the sign-up page, so the flow works offline for demos.
+- **Real email:** fill in `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` (and optionally `MAIL_FROM`) in `backend/.env`, then restart the API. For Gmail: turn on 2-Step Verification, create an **App Password** (Google Account → Security → App passwords), and use `smtp.gmail.com`, port `465`, `SMTP_SECURE=true`, your Gmail address and the 16-character app password. The API's start-up line says which mode is active.
+- Email was chosen over phone because sending SMS in India needs a paid gateway and DLT template registration.
 
 ---
 
@@ -117,7 +131,8 @@ cd backend && npm run test:smoke
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /api/auth/login`, `/register`, `/change-password`, `GET /me` | auth; register = civilian self-signup (3 inserts in one transaction) |
+| `POST /api/auth/login`, `/change-password`, `GET /me` | auth |
+| `POST /api/auth/otp/request`, `POST /api/auth/register` | citizen sign-up: email code first, then the account (login + citizen + verified email in one transaction, code marked used) |
 | `GET /api/meta`, `GET /api/lookups/:resource` | introspected metadata, FK dropdown options |
 | `GET/POST/PUT/PATCH/DELETE /api/{departments, employees, civilians, companies, zones, feeder-pillars, streetlights, sensors, complaints, work-orders, spare-parts, billing}` | CRUD with `?page&pageSize&q&sort&order&<column>=value[,value]` |
 | `GET /api/energy-logs`, `POST /api/energy-logs`, `DELETE /api/energy-logs/:pole/:log` | weak entity via `sp_record_energy` |

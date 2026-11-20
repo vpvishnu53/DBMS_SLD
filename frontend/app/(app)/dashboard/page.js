@@ -52,7 +52,7 @@ export default function Dashboard() {
           <div className="card-title">Streetlight status</div>
           <HBarList status data={lightStatus} />
           <div className="card-title" style={{ marginTop: 18 }}>Complaints by category</div>
-          <HBarList data={categories} />
+          {categories.length ? <HBarList data={categories} /> : <div className="muted" style={{ fontSize: 12.5 }}>No complaints yet.</div>}
         </div>
       </div>
 
@@ -81,13 +81,14 @@ export default function Dashboard() {
         </div>
         <div className="card">
           <div className="card-title">Ticket pipeline</div>
-          <HBarList status data={complaintStatus} />
+          {complaintStatus.length ? <HBarList status data={complaintStatus} /> : <div className="muted" style={{ fontSize: 12.5 }}>No complaints yet — citizens report faults from the citizen portal.</div>}
         </div>
       </div>
 
       <div className="grid grid-3" style={{ marginTop: 16 }}>
         <div className="card">
           <div className="card-title">Latest complaints <Link href="/manage/complaints" className="btn btn-ghost btn-sm">View all</Link></div>
+          {!recent.length && <div className="muted" style={{ fontSize: 12.5 }}>No complaints yet — citizens report faults from the citizen portal.</div>}
           <ul className="timeline">
             {recent.map((c) => (
               <li key={c.complaint_id}>

@@ -38,15 +38,6 @@ INSERT INTO homepage (username, password, user_type) VALUES ('sneha.k',         
 INSERT INTO homepage (username, password, user_type) VALUES ('arjun.reddy',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
 INSERT INTO homepage (username, password, user_type) VALUES ('meera.iyer',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
 INSERT INTO homepage (username, password, user_type) VALUES ('rohan.desai',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('fatima.sheikh',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('aditya.bhat',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('kavya.shenoy',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('naveen.prasad',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('pooja.ramesh',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('thomas.george',   '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('divya.joshi',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('harish.rao',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
-INSERT INTO homepage (username, password, user_type) VALUES ('anjali.verma',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
 INSERT INTO homepage (username, password, user_type) VALUES ('lumen',           '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
 INSERT INTO homepage (username, password, user_type) VALUES ('brightpath',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
 INSERT INTO homepage (username, password, user_type) VALUES ('deccanpower',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
@@ -106,40 +97,11 @@ INSERT INTO employee_phone VALUES (1010, '+918971012345');
 INSERT INTO employee_phone VALUES (1011, '+919986123450');
 INSERT INTO employee_phone VALUES (1012, '+917760234561');
 
--- ---------- civilians (5001..5010) ----------
+-- ---------- civilians: just the demo citizen (5001); real citizens sign up with an email OTP ----------
 INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Rohan', NULL, 'Desai', '5th Cross, Koramangala 6th Block', 'Bengaluru', 'Karnataka', '560095', 'rohan.desai');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Fatima', NULL, 'Sheikh', '12th Main, HAL 2nd Stage', 'Bengaluru', 'Karnataka', '560038', 'fatima.sheikh');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Aditya', 'K', 'Bhat', '30th Cross, Jayanagar 4th T Block', 'Bengaluru', 'Karnataka', '560041', 'aditya.bhat');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Kavya', NULL, 'Shenoy', 'Hope Farm Junction', 'Bengaluru', 'Karnataka', '560066', 'kavya.shenoy');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Naveen', NULL, 'Prasad', '15th Cross, Malleshwaram', 'Bengaluru', 'Karnataka', '560003', 'naveen.prasad');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Pooja', NULL, 'Ramesh', 'Neeladri Nagar, Electronic City Ph 1', 'Bengaluru', 'Karnataka', '560100', 'pooja.ramesh');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Thomas', NULL, 'George', '1st Block, Koramangala', 'Bengaluru', 'Karnataka', '560034', 'thomas.george');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Divya', NULL, 'Joshi', 'Defence Colony, Indiranagar', 'Bengaluru', 'Karnataka', '560038', 'divya.joshi');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Harish', NULL, 'Rao', 'South End Circle', 'Bengaluru', 'Karnataka', '560011', 'harish.rao');
-INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Anjali', 'M', 'Verma', 'Brookefield Main Rd', 'Bengaluru', 'Karnataka', '560066', 'anjali.verma');
 
 INSERT INTO civilian_email VALUES (5001, 'rohan.desai@gmail.com');
-INSERT INTO civilian_email VALUES (5002, 'fatima.sheikh@outlook.com');
-INSERT INTO civilian_email VALUES (5003, 'aditya.bhat@yahoo.in');
-INSERT INTO civilian_email VALUES (5003, 'adi.kb@gmail.com');
-INSERT INTO civilian_email VALUES (5004, 'kavya.shenoy@gmail.com');
-INSERT INTO civilian_email VALUES (5005, 'naveen.p@gmail.com');
-INSERT INTO civilian_email VALUES (5006, 'pooja.ramesh@gmail.com');
-INSERT INTO civilian_email VALUES (5007, 'thomas.george@proton.me');
-INSERT INTO civilian_email VALUES (5008, 'divya.joshi@gmail.com');
-INSERT INTO civilian_email VALUES (5009, 'harish.rao@rediffmail.com');
-INSERT INTO civilian_email VALUES (5010, 'anjali.verma@gmail.com');
 INSERT INTO civilian_phone VALUES (5001, '+919876500001');
-INSERT INTO civilian_phone VALUES (5002, '+919876500002');
-INSERT INTO civilian_phone VALUES (5003, '+919876500003');
-INSERT INTO civilian_phone VALUES (5004, '+919876500004');
-INSERT INTO civilian_phone VALUES (5004, '+918050500004');
-INSERT INTO civilian_phone VALUES (5005, '+919876500005');
-INSERT INTO civilian_phone VALUES (5006, '+919876500006');
-INSERT INTO civilian_phone VALUES (5007, '+919876500007');
-INSERT INTO civilian_phone VALUES (5008, '+919876500008');
-INSERT INTO civilian_phone VALUES (5009, '+919876500009');
-INSERT INTO civilian_phone VALUES (5010, '+919876500010');
 
 -- ---------- contractor companies ----------
 INSERT INTO company VALUES ('KA-EL-2019-0457', 'Lumen Infra Services Pvt Ltd', 'Ravi Shankar',  '29AABCL4571K1Z3', 'CLASS_I',   'Peenya Industrial Area', 'Bengaluru', 'Karnataka', '560058', 'lumen');
@@ -250,91 +212,9 @@ UPDATE streetlight SET current_status = 'FAULTY'         WHERE pole_id IN (10020
 UPDATE streetlight SET current_status = 'DECOMMISSIONED' WHERE pole_id = 10048;
 UPDATE feeder_pillar SET operational_status = 'MAINTENANCE' WHERE cabinet_id = 110;
 
--- ---------- complaints (90001..90015) -- trigger flips light to FAULTY ----------
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('LIGHT_OUT',      'Light completely off near the bakery for 3 nights.',            SYSTIMESTAMP - NUMTODSINTERVAL(40, 'DAY'), 5001, 10003, 1010);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('FLICKERING',     'Lamp flickers continuously after 9 PM.',                         SYSTIMESTAMP - NUMTODSINTERVAL(35, 'DAY'), 5002, 10011, 1010);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('DAMAGED_POLE',   'Pole tilted after a truck hit it, looks unsafe.',                SYSTIMESTAMP - NUMTODSINTERVAL(30, 'DAY'), 5003, 10019, 1012);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('EXPOSED_WIRING', 'Junction box open with wires hanging at child height.',          SYSTIMESTAMP - NUMTODSINTERVAL(25, 'DAY'), 5004, 10027, 1010);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('DAY_BURNING',    'Light stays on during the day, wasting power.',                  SYSTIMESTAMP - NUMTODSINTERVAL(20, 'DAY'), 5005, 10035, 1012);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('LIGHT_OUT',      'Entire stretch dark near the bus stop.',                         SYSTIMESTAMP - NUMTODSINTERVAL(15, 'DAY'), 5006, 10043, 1010);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('FLICKERING',     'Strobe-like flicker, very distracting for drivers.',             SYSTIMESTAMP - NUMTODSINTERVAL(6, 'DAY'),  5007, 10005, 1012);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('LIGHT_OUT',      'Not working since the rain on Sunday.',                          SYSTIMESTAMP - NUMTODSINTERVAL(5, 'DAY'),  5008, 10014, 1010);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('EXPOSED_WIRING', 'Sparks seen from the base of the pole.',                         SYSTIMESTAMP - NUMTODSINTERVAL(3, 'DAY'),  5009, 10022, 1012);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('LIGHT_OUT',      'Dark corner near the park gate.',                                SYSTIMESTAMP - NUMTODSINTERVAL(2, 'DAY'),  5010, 10030, NULL);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('FLICKERING',     'Flickering on and off every few seconds.',                       SYSTIMESTAMP - NUMTODSINTERVAL(1, 'DAY'),  5001, 10038, NULL);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('DAMAGED_POLE',   'Lamp head cover broken, glass on the footpath.',                 SYSTIMESTAMP - NUMTODSINTERVAL(1, 'DAY'),  5002, 10046, NULL);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('OTHER',          'Please install a new light on our lane (no pole here).',        SYSTIMESTAMP - NUMTODSINTERVAL(10, 'DAY'), 5003, NULL,  1012);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('LIGHT_OUT',      'Light out outside apartment block B.',                           SYSTIMESTAMP - NUMTODSINTERVAL(50, 'DAY'), 5004, 10016, 1010);
-INSERT INTO complaint (issue_category, description, reported_timestamp, citizen_id, pole_id, handled_by) VALUES ('FLICKERING',     'Same pole as an earlier report - still flickering badly.',        SYSTIMESTAMP - NUMTODSINTERVAL(4, 'DAY'),  5008, 10005, 1012);
-
--- ---------- work orders (30001..30013) ----------
--- resolves is 1:N (one work order -> many complaints), stored as COMPLAINT.work_order_id.
--- Each job is created as ASSIGNED, its complaint(s) are linked, then it is moved to
--- its final status so the triggers cascade to lights and tickets as in real use.
-DECLARE
-  v_id NUMBER;
-  FUNCTION ago(p_days NUMBER, p_hours NUMBER DEFAULT 0) RETURN TIMESTAMP IS
-  BEGIN
-    RETURN SYSTIMESTAMP - NUMTODSINTERVAL(p_days, 'DAY') + NUMTODSINTERVAL(p_hours, 'HOUR');
-  END;
-  PROCEDURE wo(p_type VARCHAR2, p_status VARCHAR2, p_notes VARCHAR2, p_created TIMESTAMP, p_done TIMESTAMP,
-               p_pole NUMBER, p_zone NUMBER, p_emp NUMBER, p_lic VARCHAR2, p_complaints VARCHAR2 DEFAULT NULL) IS
-  BEGIN
-    INSERT INTO work_order (work_type, status, resolution_notes, created_timestamp, zone_id, pole_id, emp_id, license_no)
-    VALUES (p_type, 'ASSIGNED', p_notes, p_created, p_zone, p_pole, p_emp, p_lic)
-    RETURNING work_order_id INTO v_id;
-    IF p_complaints IS NOT NULL THEN
-      UPDATE complaint SET work_order_id = v_id
-       WHERE INSTR(',' || p_complaints || ',', ',' || complaint_id || ',') > 0;
-    END IF;
-    IF p_status <> 'ASSIGNED' THEN
-      UPDATE work_order SET status = p_status, completion_timestamp = p_done WHERE work_order_id = v_id;
-    END IF;
-  END;
-BEGIN
-  --   type           status         notes                                                          created       completed   pole   zone  emp   company             complaints
-  wo('REPAIR',      'COMPLETED',   'Replaced failed LED driver; tested OK.',                       ago(40, 3), ago(39),     10003, NULL, 1006, NULL,              '90001');
-  wo('REPAIR',      'COMPLETED',   'Loose neutral at terminal block fixed, photocell replaced.',   ago(35, 5), ago(33),     10011, NULL, 1007, 'KA-EL-2020-1123', '90002');
-  wo('REPLACEMENT', 'COMPLETED',   'Pole replaced with new 9m GI pole and LED fixture.',           ago(30, 2), ago(26),     10019, NULL, 1005, 'KA-EL-2019-0457', '90003');
-  wo('REPAIR',      'COMPLETED',   'Junction box sealed, cable re-terminated, SPD installed.',     ago(25, 1), ago(25, 9),  10027, NULL, 1008, 'KA-EL-2018-0789', '90004');
-  wo('REPAIR',      'COMPLETED',   'Faulty photocell swapped.',                                    ago(20, 6), ago(19),     10035, NULL, 1006, NULL,              '90005');
-  wo('REPLACEMENT', 'COMPLETED',   'Sodium lamp + ballast replaced with LED retrofit.',            ago(15, 4), ago(13),     10043, NULL, 1007, 'KA-EL-2019-0457', '90006');
-  wo('REPAIR',      'IN_PROGRESS', 'Driver ordered, awaiting install.',                            ago(5),     NULL,        10005, NULL, 1006, NULL,              '90007,90015');
-  wo('REPAIR',      'ASSIGNED',    NULL,                                                           ago(4),     NULL,        10014, NULL, 1008, NULL,              '90008');
-  wo('REPAIR',      'IN_PROGRESS', 'Area cordoned off; cable fault being traced.',                 ago(3, 2),  NULL,        10022, NULL, 1005, 'KA-EL-2018-0789', '90009');
-  wo('REPAIR',      'COMPLETED',   'MCB tripped repeatedly; replaced MCB.',                        ago(50, 2), ago(49),     10016, NULL, 1006, NULL,              '90014');
-  wo('PREVENTIVE',  'COMPLETED',   'Quarterly cleaning and IR inspection of Whitefield feeders.',  ago(60),    ago(57),     NULL,  4,    1005, 'KA-EL-2022-2045');
-  wo('INSPECTION',  'PENDING',     NULL,                                                           ago(1),     NULL,        NULL,  6,    1005, NULL);
-  wo('UPGRADE',     'COMPLETED',   'Smart dimming controller retrofitted.',                        ago(70),    ago(68),     10001, NULL, 1011, 'KA-EL-2019-0457');
-END;
-/
-
-UPDATE complaint SET ticket_status = 'CLOSED'   WHERE complaint_id = 90014;
-UPDATE complaint SET ticket_status = 'REJECTED' WHERE complaint_id = 90013;
-
--- ---------- parts consumed (trigger debits stock) ----------
-INSERT INTO work_order_part VALUES (30001, 502, 1);
-INSERT INTO work_order_part VALUES (30002, 505, 1);
-INSERT INTO work_order_part VALUES (30003, 508, 1);
-INSERT INTO work_order_part VALUES (30003, 501, 1);
-INSERT INTO work_order_part VALUES (30003, 506, 12);
-INSERT INTO work_order_part VALUES (30004, 506, 6);
-INSERT INTO work_order_part VALUES (30004, 510, 1);
-INSERT INTO work_order_part VALUES (30005, 505, 1);
-INSERT INTO work_order_part VALUES (30006, 501, 1);
-INSERT INTO work_order_part VALUES (30006, 502, 1);
-INSERT INTO work_order_part VALUES (30009, 506, 20);
-INSERT INTO work_order_part VALUES (30010, 507, 1);
-INSERT INTO work_order_part VALUES (30011, 507, 2);
-INSERT INTO work_order_part VALUES (30013, 509, 1);
-
--- ---------- billing (contractor jobs) ----------
-INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30002, 'UPI-77812093', 'UPI',    'RCPT-2026-0141', 3000,  2640,  2640);
-INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30003, 'NEFT-SBIN0045', 'NEFT',  'RCPT-2026-0152', 35000, 38870, 38870);
-INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30004, 'NEFT-HDFC0912', 'NEFT',  'RCPT-2026-0160', 6000,  5180,  5180);
-INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30006, 'RTGS-ICIC2231', 'RTGS',  'RCPT-2026-0171', 8000,  7340,  7340);
-INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30011, 'CHQ-004512',    'CHEQUE','RCPT-2026-0118', 12000, 9530,  9530);
-INSERT INTO billing (work_order_id, payment_id, payment_type, receipt_no, budget_sanctioned, actually_spent, billing_amount) VALUES (30013, NULL,            'NEFT',   NULL,            5000,  0,     4250);
+-- ---------- operations start empty ----------
+-- No complaints, work orders, parts usage or bills are seeded: they are created
+-- through the website (citizen report -> dispatch -> job -> bill) during use/demo.
 
 COMMIT;
 PROMPT Seed data loaded.

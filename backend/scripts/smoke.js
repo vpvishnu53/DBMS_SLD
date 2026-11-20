@@ -102,11 +102,33 @@ const login = async (u, p = 'Password@123') => (await call('POST', '/auth/login'
   check('deleting the employee deleted its login', !(await login('smoke.tech', 'Password123')));
   check('cannot delete your own employee record', (await call('DELETE', '/employees/1001', { token: admin })).status === 400);
 
+  console.log('\ncitizen sign-up with email OTP');
+  const tag = `smoke${Date.now() % 1e7}`;
+  const email = `${tag}@example.com`;
+  const signup = { email, username: tag, password: 'Password123', first_name: 'Smoke', last_name: 'Citizen', city: 'Bengaluru' };
+  const noCode = await call('POST', '/auth/register', { body: signup });
+  check('sign-up without a code -> 400', noCode.status === 400, noCode.data);
+  const otpReq = await call('POST', '/auth/otp/request', { body: { email } });
+  check('code requested (EMAIL_OTP row created)', otpReq.status === 201 && otpReq.data.expiresInMinutes === 10, otpReq.data);
+  const devCode = otpReq.data?.devCode;
+  if (!devCode) console.log('  (SMTP is configured, so the code went to a real inbox; the next checks need DEV mode)');
+  const tooSoon = await call('POST', '/auth/otp/request', { body: { email } });
+  check('resend within 60 s -> 429', tooSoon.status === 429, tooSoon.data);
+  const wrongCode = devCode === '000000' ? '111111' : '000000';
+  const badCode = await call('POST', '/auth/register', { body: { ...signup, otp: wrongCode } });
+  check('wrong code -> 400 with attempts left', badCode.status === 400 && /attempt/.test(badCode.data.error), badCode.data);
+  const ok = await call('POST', '/auth/register', { body: { ...signup, otp: devCode } });
+  check('right code -> account created', ok.status === 201 && ok.data.user?.userType === 'CIVILIAN', ok.data);
+  const reuse = await call('POST', '/auth/register', { body: { ...signup, username: `${tag}b`, otp: devCode } });
+  check('same code cannot be used twice', reuse.status === 400, reuse.data);
+  const otpAgain = await call('POST', '/auth/otp/request', { body: { email } });
+  check('registered email cannot request a new code -> 409', otpAgain.status === 409, otpAgain.data);
+  const citizen2 = ok.data?.token;
+
   console.log('\ncitizen -> complaint -> work order -> parts -> completion (trigger cascade)');
   const pole = 10002;
   const cmp = await call('POST', '/portal/citizen/complaints', { token: citizen, body: { pole_id: pole, issue_category: 'LIGHT_OUT', description: 'Smoke test: lamp not glowing at night' } });
   check('citizen files complaint', cmp.status === 201, cmp.data);
-  const citizen2 = await login('fatima.sheikh');
   const cmp2 = await call('POST', '/portal/citizen/complaints', { token: citizen2, body: { pole_id: pole, issue_category: 'LIGHT_OUT', description: 'Smoke test: same pole, second citizen' } });
   check('second citizen reports the same pole', cmp2.status === 201, cmp2.data);
   const light1 = await call('GET', `/streetlights/${pole}`, { token: admin });
