@@ -44,20 +44,55 @@ function normEmail(raw) {
   return email;
 }
 
-/** The domain must publish mail servers (MX), so made-up addresses are refused. */
+// Public DNS is asked first: campus / office networks often run "split" DNS that
+// hides MX records (e.g. bl.students.amrita.edu has an MX on public DNS but not on
+// the campus resolver). The system resolver is the fallback.
+const publicDns = new dns.Resolver({ timeout: 3000, tries: 2 });
+publicDns.setServers(['8.8.8.8', '1.1.1.1']);
+const RESOLVERS = [publicDns, dns];
+const MISSING = ['ENOTFOUND', 'ENODOMAIN', 'ENONAME', 'ENODATA'];
+
+/**
+ * Refuse addresses whose domain cannot receive mail:
+ *   - MX records found            -> accepts mail
+ *   - only a null MX ("0 .")      -> explicitly takes no mail -> refused
+ *   - no MX but an A/AAAA address -> accepts mail (RFC 5321 section 5.1 "implicit MX")
+ *   - domain does not exist       -> refused
+ * If DNS can't be reached at all (offline), the address is allowed; the emailed
+ * code is still the real proof that the person owns it.
+ */
 async function assertDomainAcceptsMail(email) {
   const domain = email.split('@')[1];
-  try {
-    const mx = await dns.resolveMx(domain);
-    const real = mx.filter((r) => r.exchange && r.exchange !== '.'); // "0 ." = null MX: domain takes no mail
-    if (!real.length) throw badRequest(`${domain} does not accept email. Check the address.`);
-  } catch (err) {
-    if (err instanceof HttpError) throw err;
-    if (['ENOTFOUND', 'ENODATA', 'ENODOMAIN', 'ENONAME'].includes(err.code))
-      throw badRequest(`${domain} does not accept email. Check the address.`);
-    // DNS itself failed (offline, timeout): don't block sign-up for that
-    console.warn(`[otp] MX lookup for ${domain} failed (${err.code}); allowing`);
+  const refuse = () => badRequest(`${domain} can't receive email (the domain doesn't exist). Check the address.`);
+  let reachable = false;
+  let nullMx = false;
+
+  for (const r of RESOLVERS) {
+    try {
+      const mx = await r.resolveMx(domain);
+      reachable = true;
+      if (mx.some((m) => m.exchange && m.exchange !== '.')) return;
+      if (mx.length) nullMx = true;
+    } catch (err) {
+      if (MISSING.includes(err.code)) reachable = true;
+    }
   }
+  if (nullMx) throw badRequest(`${domain} does not accept email. Check the address.`);
+
+  for (const r of RESOLVERS) {
+    for (const fn of ['resolve4', 'resolve6']) {
+      try {
+        if ((await r[fn](domain)).length) return; // implicit MX
+      } catch (err) {
+        if (MISSING.includes(err.code)) reachable = true;
+      }
+    }
+  }
+  if (!reachable) {
+    console.warn(`[otp] DNS unreachable while checking ${domain}; allowing`);
+    return;
+  }
+  throw refuse();
 }
 
 const hashCode = (email, code) =>
