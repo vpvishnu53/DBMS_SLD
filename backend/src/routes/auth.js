@@ -9,7 +9,6 @@ const { HttpError, badRequest } = require('../middleware/errors');
 const { describeTable } = require('../lib/schema');
 const { coerceRow, coerceValue } = require('../lib/validate');
 const { checkUsername, checkPassword, hashPassword } = require('../lib/password');
-const { issueOtp, checkOtp, consumeOtp, otpDelivery } = require('../lib/otp');
 
 const router = express.Router();
 const DUMMY_HASH = bcrypt.hashSync('timing-equaliser-not-a-real-password', 10);
@@ -48,19 +47,7 @@ router.post('/login', async (req, res) => {
   res.json({ token: sign(user), user });
 });
 
-/** Lets the sign-up page say up front if codes can't be sent ('email' | 'dev' | 'off'). */
-router.get('/otp/config', (_req, res) => res.json({ delivery: otpDelivery() }));
-
-/** Step 1 of sign-up: email a 6-digit code to prove the citizen owns the address. */
-router.post('/otp/request', async (req, res) => {
-  res.status(201).json(await issueOtp(req.body?.email));
-});
-
-/**
- * Step 2: civilian self-registration. Needs the email + the code from step 1.
- * HOMEPAGE + CIVILIAN + email (+ phone) are created and the code is marked used
- * in ONE transaction, so a failed sign-up leaves the code usable.
- */
+/** Civilian self-registration: HOMEPAGE + CIVILIAN (+ email/phone) in one transaction. */
 router.post('/register', async (req, res) => {
   const b = req.body || {};
   const username = checkUsername(b.username);
@@ -71,14 +58,12 @@ router.post('/register', async (req, res) => {
     writable: ['first_name', 'middle_name', 'last_name', 'street', 'city', 'state', 'pincode'],
     creating: true,
   });
+  const email = b.email ? coerceValue((await describeTable('CIVILIAN_EMAIL')).byName.email, b.email) : null;
   const phone = b.phone ? coerceValue((await describeTable('CIVILIAN_PHONE')).byName.phone_number, b.phone) : null;
-  // validate everything else first so a typo elsewhere doesn't burn an OTP attempt
-  const { email, otpId } = await checkOtp(b.email, b.otp);
   const hash = await hashPassword(b.password);
   row.username = username;
 
   const user = await withTransaction(async (conn) => {
-    await consumeOtp(conn, otpId);
     // the login must exist first: CIVILIAN.username is a NOT NULL FK to it
     await conn.execute(
       `INSERT INTO homepage (username, password, user_type) VALUES (:u, :p, 'CIVILIAN')`,
@@ -91,7 +76,7 @@ router.post('/register', async (req, res) => {
       { ...Object.fromEntries(cols.map((c) => [`${c}_v`, row[c]])), id: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER } }
     );
     const id = r.outBinds.id[0];
-    await conn.execute(`INSERT INTO civilian_email VALUES (:id, :e)`, { id, e: email }); // verified address
+    if (email) await conn.execute(`INSERT INTO civilian_email VALUES (:id, :e)`, { id, e: email });
     if (phone) await conn.execute(`INSERT INTO civilian_phone VALUES (:id, :p)`, { id, p: phone });
     return toPrincipal(await queryOne(USER_SQL, { u: username }, conn));
   });

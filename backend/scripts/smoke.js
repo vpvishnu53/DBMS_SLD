@@ -102,39 +102,15 @@ const login = async (u, p = 'Password@123') => (await call('POST', '/auth/login'
   check('deleting the employee deleted its login', !(await login('smoke.tech', 'Password123')));
   check('cannot delete your own employee record', (await call('DELETE', '/employees/1001', { token: admin })).status === 400);
 
-  console.log('\ncitizen sign-up with email OTP');
+  console.log('\ncitizen sign-up');
   const tag = `smoke${Date.now() % 1e7}`;
-  const mode = (await call('GET', '/auth/otp/config')).data?.delivery;
-  console.log(`  (code delivery mode on the server: ${mode})`);
-  const fmt = await call('POST', '/auth/otp/request', { body: { email: 'not-an-email' } });
-  check('malformed email refused', fmt.status === 400 || (mode === 'off' && fmt.status === 503), fmt.data);
-  const fake = await call('POST', '/auth/otp/request', { body: { email: `${tag}@no-such-domain-${tag}.invalid` } });
-  check('made-up domain refused (no MX records)', fake.status === 400 || (mode === 'off' && fake.status === 503), fake.data);
-  const nullMx = await call('POST', '/auth/otp/request', { body: { email: `${tag}@example.com` } });
-  check('domain that takes no mail refused (example.com null MX)', nullMx.status === 400 || (mode === 'off' && nullMx.status === 503), nullMx.data);
-  if (mode === 'dev') {
-    // DEV mode sends nothing, so a gmail-shaped address is safe; the code comes back only to tests
-    const email = `lumina.${tag}@gmail.com`;
-    const signup = { email, username: tag, password: 'Password123', first_name: 'Smoke', last_name: 'Citizen', city: 'Bengaluru' };
-    const noCode = await call('POST', '/auth/register', { body: signup });
-    check('sign-up without a code -> 400', noCode.status === 400, noCode.data);
-    const otpReq = await call('POST', '/auth/otp/request', { body: { email } });
-    check('code requested (EMAIL_OTP row created)', otpReq.status === 201 && otpReq.data.expiresInMinutes === 10, otpReq.data);
-    const devCode = otpReq.data?.devCode;
-    const tooSoon = await call('POST', '/auth/otp/request', { body: { email } });
-    check('resend within 60 s -> 429', tooSoon.status === 429, tooSoon.data);
-    const badCode = await call('POST', '/auth/register', { body: { ...signup, otp: devCode === '000000' ? '111111' : '000000' } });
-    check('wrong code -> 400 with attempts left', badCode.status === 400 && /attempt/.test(badCode.data.error), badCode.data);
-    const ok = await call('POST', '/auth/register', { body: { ...signup, otp: devCode } });
-    check('right code -> account created', ok.status === 201 && ok.data.user?.userType === 'CIVILIAN', ok.data);
-    const reuse = await call('POST', '/auth/register', { body: { ...signup, username: `${tag}b`, otp: devCode } });
-    check('same code cannot be used twice', reuse.status === 400, reuse.data);
-    const otpAgain = await call('POST', '/auth/otp/request', { body: { email } });
-    check('registered email cannot request a new code -> 409', otpAgain.status === 409, otpAgain.data);
-  } else {
-    console.log('  (code checks skipped: they need OTP_DEV_MODE=true with SMTP empty, so no real inbox gets test mail)');
-  }
-  // second citizen for the shared-job test: staff-created citizens need no email code
+  const reg = await call('POST', '/auth/register', { body: { username: tag, password: 'Password123', first_name: 'Smoke', last_name: 'Citizen', email: `${tag}@example.com`, city: 'Bengaluru' } });
+  check('citizen signs up (login + citizen + email in one transaction)', reg.status === 201 && reg.data.user?.userType === 'CIVILIAN', reg.data);
+  const dupUser = await call('POST', '/auth/register', { body: { username: tag, password: 'Password123', first_name: 'Dup', last_name: 'User' } });
+  check('taken username -> 409', dupUser.status === 409, dupUser.data);
+  const weak = await call('POST', '/auth/register', { body: { username: `${tag}w`, password: 'short', first_name: 'Weak', last_name: 'Pass' } });
+  check('weak password -> 400', weak.status === 400, weak.data);
+  // second citizen for the shared-job test
   const civ2 = await call('POST', '/civilians', { token: admin, body: { first_name: 'Second', last_name: 'Citizen', city: 'Bengaluru', username: `${tag}c2`, password: 'Password123' } });
   check('staff can create a citizen with a login', civ2.status === 201, civ2.data);
   const citizen2 = await login(`${tag}c2`, 'Password123');

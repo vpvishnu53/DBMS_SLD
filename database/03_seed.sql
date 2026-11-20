@@ -97,7 +97,7 @@ INSERT INTO employee_phone VALUES (1010, '+918971012345');
 INSERT INTO employee_phone VALUES (1011, '+919986123450');
 INSERT INTO employee_phone VALUES (1012, '+917760234561');
 
--- ---------- civilians: just the demo citizen (5001); real citizens sign up with an email OTP ----------
+-- ---------- civilians: just the demo citizen (5001); other citizens sign up on the website ----------
 INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Rohan', NULL, 'Desai', '5th Cross, Koramangala 6th Block', 'Bengaluru', 'Karnataka', '560095', 'rohan.desai');
 
 INSERT INTO civilian_email VALUES (5001, 'rohan.desai@gmail.com');

@@ -45,7 +45,6 @@ CREATE SEQUENCE seq_complaint   START WITH 90001 NOCACHE;
 CREATE SEQUENCE seq_work_order  START WITH 30001 NOCACHE;
 CREATE SEQUENCE seq_part        START WITH 501  NOCACHE;
 CREATE SEQUENCE seq_billing     START WITH 60001 NOCACHE;
-CREATE SEQUENCE seq_email_otp   START WITH 1 NOCACHE;
 
 -- =====================================================================
 --  ACCOUNTS
@@ -63,21 +62,6 @@ CREATE TABLE homepage (
   last_login_at TIMESTAMP
 );
 
--- EMAIL_OTP: one-time codes that prove a new citizen owns their email before
--- the account is created. Implementation table, not an entity in the ER diagram.
--- Only an HMAC of the code is stored, never the code itself.
-CREATE TABLE email_otp (
-  otp_id      NUMBER(10)    CONSTRAINT pk_email_otp PRIMARY KEY,
-  email       VARCHAR2(120) NOT NULL CONSTRAINT ck_otp_email CHECK (REGEXP_LIKE(email, '^[^@ ]+@[^@ ]+\.[^@ ]+$')),
-  code_hash   VARCHAR2(64)  NOT NULL,
-  purpose     VARCHAR2(12)  DEFAULT 'REGISTER' NOT NULL CONSTRAINT ck_otp_purpose CHECK (purpose IN ('REGISTER')),
-  attempts    NUMBER(2)     DEFAULT 0 NOT NULL CONSTRAINT ck_otp_attempts CHECK (attempts BETWEEN 0 AND 10),
-  created_at  TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
-  expires_at  TIMESTAMP     NOT NULL,
-  consumed_at TIMESTAMP,
-  CONSTRAINT ck_otp_expiry CHECK (expires_at > created_at)
-);
-CREATE INDEX ix_email_otp_email ON email_otp(email, created_at);
 
 -- =====================================================================
 --  ORGANISATION

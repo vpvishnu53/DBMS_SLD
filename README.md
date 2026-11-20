@@ -12,8 +12,8 @@ EndSem/
 ├── ER_Diagram-DBMS.png
 ├── database/          Phase 1 – Oracle schema, PL/SQL, seed data
 │   ├── 00_create_user.sql   creates schema user SLMS (run as SYSDBA)
-│   ├── 01_schema.sql        21 tables, 12 sequences, constraints, indexes
-│   ├── 02_logic.sql         23 triggers, 3 functions, 3 procedures, 15 views
+│   ├── 01_schema.sql        20 tables, 11 sequences, constraints, indexes
+│   ├── 02_logic.sql         22 triggers, 3 functions, 3 procedures, 15 views
 │   ├── 03_seed.sql          Bengaluru demo data: staff, contractors, 48 poles, 288 energy logs; no complaints yet
 │   ├── 99_verify.sql        sanity report
 │   └── setup.ps1            one-command (re)build
@@ -43,7 +43,7 @@ cd backend && npm install && npm run dev
 cd frontend && npm install && npm run dev
 ```
 
-**4. Optional:** run the end-to-end API test (58 checks; 65 with `OTP_DEV_MODE=true` and SMTP empty) while the API is running:
+**4. Optional:** run the end-to-end API test (58 checks) while the API is running:
 ```bash
 cd backend && npm run test:smoke
 ```
@@ -56,30 +56,11 @@ cd backend && npm run test:smoke
 | `suresh.kumar` | Technician | work orders, parts, energy readings |
 | `vikram.shetty` | Accountant | billing, companies, spare parts |
 | `sneha.k` | Support agent | complaints, civilians |
-| `rohan.desai` | Citizen | citizen portal (new citizens sign up with an email code) |
+| `rohan.desai` | Citizen | citizen portal (new citizens sign up from "Create an account") |
 | `lumen`, `brightpath`, `deccanpower`, `nammalights` | Contractor companies | contractor portal |
 
 The other staff logins (`priya.nair`, `rahul.gowda`, `deepa.k`, `m.irfan`, `lakshmi.hegde`, `arjun.reddy`, `meera.iyer`) use the same password.
 The database starts with **no complaints, work orders or bills**. They are created live through the site; the smoke test (step 4) adds some, so run step 1 again afterwards for a clean demo.
-
-### Email verification for citizen sign-up (OTP)
-A new citizen must prove they own a real email address before the account is created:
-1. The address must look valid **and its domain must accept mail** (DNS MX lookup), so made-up addresses are refused.
-2. The sign-up page asks for a 6-digit code, which is **emailed** to that address (`POST /api/auth/otp/request`). Only an HMAC of the code is stored, in the `EMAIL_OTP` table. The code is never shown on the website.
-3. The account is created only if the code matches (`POST /api/auth/register`). The code is marked used in the same transaction.
-
-Limits: the code expires in 10 minutes; one code per 60 s; 5 codes per hour per email; 5 wrong tries per code; an email that already has an account can't request one. Citizens created by staff (Civilians → New) don't need a code.
-
-**Set up sending (once):** codes are sent from a Gmail account using an App Password.
-1. On the Gmail account that should send the codes, turn on **2-Step Verification**.
-2. Open https://myaccount.google.com/apppasswords, create an app password (any name, for example "Lumina") and copy the 16 characters.
-3. In `backend/.env` set `SMTP_USER=<that gmail address>` and `SMTP_PASS=<the 16 characters>`. Host, port and security are already filled in for Gmail.
-4. Check it: `cd backend && npm run mail:test -- you@gmail.com`. It logs in and sends a sample code email.
-5. Restart the API. Its start-up line should say `Sign-up codes: emailed from … (SMTP login OK)`.
-
-Until this is done, the sign-up page says sign-up emails aren't set up. Other SMTP providers work too: change `SMTP_HOST`, `SMTP_PORT` and `SMTP_SECURE` (465 → `true`, 587 → `false`).
-For an offline demo only, `OTP_DEV_MODE=true` (with `SMTP_USER`/`SMTP_PASS` empty) prints codes in the API terminal instead of emailing them.
-Email was chosen over phone because sending SMS in India needs a paid gateway and DLT template registration.
 
 ---
 
@@ -140,7 +121,7 @@ Email was chosen over phone because sending SMS in India needs a paid gateway an
 | Endpoint | Purpose |
 |---|---|
 | `POST /api/auth/login`, `/change-password`, `GET /me` | auth |
-| `POST /api/auth/otp/request`, `POST /api/auth/register` | citizen sign-up: email code first, then the account (login + citizen + verified email in one transaction, code marked used) |
+| `POST /api/auth/register` | citizen sign-up: login + citizen (+ email/phone) in one transaction |
 | `GET /api/meta`, `GET /api/lookups/:resource` | introspected metadata, FK dropdown options |
 | `GET/POST/PUT/PATCH/DELETE /api/{departments, employees, civilians, companies, zones, feeder-pillars, streetlights, sensors, complaints, work-orders, spare-parts, billing}` | CRUD with `?page&pageSize&q&sort&order&<column>=value[,value]` |
 | `GET /api/energy-logs`, `POST /api/energy-logs`, `DELETE /api/energy-logs/:pole/:log` | weak entity via `sp_record_energy` |

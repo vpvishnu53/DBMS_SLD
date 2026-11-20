@@ -31,9 +31,6 @@ BEGIN IF :NEW.part_id IS NULL THEN :NEW.part_id := seq_part.NEXTVAL; END IF; END
 CREATE OR REPLACE TRIGGER trg_billing_bi     BEFORE INSERT ON billing     FOR EACH ROW
 BEGIN IF :NEW.billing_id IS NULL THEN :NEW.billing_id := seq_billing.NEXTVAL; END IF; END;
 /
-CREATE OR REPLACE TRIGGER trg_email_otp_bi   BEFORE INSERT ON email_otp   FOR EACH ROW
-BEGIN IF :NEW.otp_id IS NULL THEN :NEW.otp_id := seq_email_otp.NEXTVAL; END IF; END;
-/
 
 -- =====================================================================
 --  2. BUSINESS-RULE TRIGGERS
