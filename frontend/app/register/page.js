@@ -74,7 +74,7 @@ export default function RegisterPage() {
 
             <div className="card" style={{ padding: 16, marginBottom: 18, background: 'var(--surface-2)' }}>
               <div className="card-title" style={{ marginBottom: 10 }}>
-                1 · Verify your email <span className="muted" style={{ fontWeight: 500 }}>so we know reports come from real people</span>
+                1 · Verify your email
               </div>
               <div className="field">
                 <label htmlFor="email">Email<span className="req">*</span></label>
