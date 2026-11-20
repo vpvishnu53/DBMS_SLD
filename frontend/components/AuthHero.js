@@ -8,10 +8,9 @@ export default function AuthHero() {
         <div><div className="brand-name">Lumina</div><div className="brand-sub">Smart Streetlight Management</div></div>
       </div>
       <div>
-        <h1>Keep the city <span>lit</span>, one pole at a time.</h1>
+        <h1>Streetlight Management System</h1>
         <p style={{ marginTop: 16 }}>
-          Track every streetlight, feeder pillar and sensor. Route citizen complaints to crews and
-          contractors, watch energy spend, and close the loop — all on Oracle.
+          Track streetlights, citizen complaints and repair work across the city.
         </p>
       </div>
       <svg className="poles" viewBox="0 0 800 180" preserveAspectRatio="none" aria-hidden="true">

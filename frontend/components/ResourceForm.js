@@ -47,7 +47,7 @@ export function FieldInput({ field, value, onChange, readOnly }) {
   );
 }
 
-export default function ResourceForm({ resource, meta, id, defaults, onClose, onSaved }) {
+export default function ResourceForm({ resource, meta, id, defaults, title: titleOverride, onClose, onSaved }) {
   const editing = id != null;
   const cfg = RESOURCES[resource] || {};
   const [values, setValues] = useState(defaults || {});
@@ -108,7 +108,7 @@ export default function ResourceForm({ resource, meta, id, defaults, onClose, on
   };
 
   const errField = error?.message?.split(/[ :]/)[0];
-  const title = `${editing ? 'Edit' : 'New'} ${meta.title || humanize(resource)}${editing ? ` · ${id}` : ''}`;
+  const title = titleOverride || `${editing ? 'Edit' : 'New'} ${meta.title || humanize(resource)}${editing ? ` · ${id}` : ''}`;
 
   return (
     <Modal title={title} onClose={onClose} footer={<>

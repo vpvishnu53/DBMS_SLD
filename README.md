@@ -49,17 +49,24 @@ cd backend && npm run test:smoke
 ```
 
 ### Demo logins (password for all: `Password@123`)
-| Username | Who | Sees |
-|---|---|---|
-| `admin` | Ananya Rao, ADMIN | everything, incl. logins |
-| `karthik.menon` | Zone supervisor | ops + infrastructure write access |
-| `suresh.kumar` | Technician | work orders, parts, energy readings |
-| `vikram.shetty` | Accountant | billing, companies, spare parts |
-| `sneha.k` | Support agent | complaints, civilians |
-| `rohan.desai` | Citizen | citizen portal (new citizens sign up from "Create an account") |
-| `lumen`, `brightpath`, `deccanpower`, `nammalights` | Contractor companies | contractor portal |
+They are also listed, grouped by role, on the login page (click one to sign in).
 
-The other staff logins (`priya.nair`, `rahul.gowda`, `deepa.k`, `m.irfan`, `lakshmi.hegde`, `arjun.reddy`, `meera.iyer`) use the same password.
+| Role | Usernames | What they can change |
+|---|---|---|
+| Admin | `admin`, `nikhil.joshi` | everything, incl. creating accounts (Logins → New account) |
+| Zone supervisor | `karthik.menon`, `priya.nair`, `rahul.gowda` | zones, streetlights, feeders, sensors, complaints, work orders |
+| Engineer | `deepa.k`, `arjun.reddy` | feeders, streetlights, sensors, work orders, spare parts |
+| Technician | `suresh.kumar`, `m.irfan`, `lakshmi.hegde` | work orders, parts used, streetlights, sensors, energy readings |
+| Accountant | `vikram.shetty`, `farah.khan` | billing, companies, spare parts |
+| Support agent | `sneha.k`, `meera.iyer` | complaints, citizens |
+| Contractor company | `lumen`, `brightpath`, `deccanpower`, `nammalights` | contractor portal: their own jobs and bills |
+| Citizen | `rohan.desai` | citizen portal: report and track faults |
+
+**New accounts:**
+- Citizens sign up themselves ("Don't have an account? Sign up" on the login page).
+- Staff and contractor accounts are created by an admin: **Logins → New account**. Pick the role, and the form opens with the role and a matching department filled in, plus the username and password for the new login.
+- Every staff member can view everything; their role decides what they can change.
+
 The database starts with **no complaints, work orders or bills**. They are created live through the site; the smoke test (step 4) adds some, so run step 1 again afterwards for a clean demo.
 
 ---

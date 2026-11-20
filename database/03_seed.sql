@@ -37,13 +37,15 @@ INSERT INTO homepage (username, password, user_type) VALUES ('vikram.shetty',   
 INSERT INTO homepage (username, password, user_type) VALUES ('sneha.k',         '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
 INSERT INTO homepage (username, password, user_type) VALUES ('arjun.reddy',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
 INSERT INTO homepage (username, password, user_type) VALUES ('meera.iyer',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('nikhil.joshi',    '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
+INSERT INTO homepage (username, password, user_type) VALUES ('farah.khan',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'EMPLOYEE');
 INSERT INTO homepage (username, password, user_type) VALUES ('rohan.desai',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'CIVILIAN');
 INSERT INTO homepage (username, password, user_type) VALUES ('lumen',           '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
 INSERT INTO homepage (username, password, user_type) VALUES ('brightpath',      '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
 INSERT INTO homepage (username, password, user_type) VALUES ('deccanpower',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
 INSERT INTO homepage (username, password, user_type) VALUES ('nammalights',     '$2b$10$ie.D4SXU6NGsUVv4uT.cxuJyqYlznj/rPfYiMP4oltUWVxd2UVfvG', 'COMPANY');
 
--- ---------- employees (1001..1012) ----------
+-- ---------- employees (1001..1014) ----------
 INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
 VALUES ('Ananya', NULL, 'Rao', DATE '1984-03-12', DATE '2012-06-01', 'ADMIN', '234567890123', 'MORNING', 145000, '12 MG Road', 'Bengaluru', 'Karnataka', '560001', 10, 'admin');
 INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
@@ -68,6 +70,10 @@ INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of
 VALUES ('Arjun', NULL, 'Reddy', DATE '1992-10-05', DATE '2017-09-25', 'ENGINEER', '476543210987', 'ROTATIONAL', 85000, 'Outer Ring Road', 'Bengaluru', 'Karnataka', '560103', 50, 'arjun.reddy');
 INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
 VALUES ('Meera', NULL, 'Iyer', DATE '1998-06-30', DATE '2023-03-01', 'SUPPORT_AGENT', '565432109876', 'EVENING', 32000, 'Malleshwaram 8th Cross', 'Bengaluru', 'Karnataka', '560003', 60, 'meera.iyer');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Nikhil', NULL, 'Joshi', DATE '1985-09-18', DATE '2014-02-03', 'ADMIN', '654321098765', 'MORNING', 138000, 'Richmond Road', 'Bengaluru', 'Karnataka', '560025', 10, 'nikhil.joshi');
+INSERT INTO employee (first_name, middle_name, last_name, date_of_birth, date_of_joining, role, aadhar_id, shift_type, salary, street, city, state, pincode, dept_id, username)
+VALUES ('Farah', NULL, 'Khan', DATE '1991-12-09', DATE '2019-10-14', 'ACCOUNTANT', '743210987654', 'MORNING', 66000, 'Frazer Town', 'Bengaluru', 'Karnataka', '560005', 40, 'farah.khan');
 
 INSERT INTO employee_email VALUES (1001, 'ananya.rao@slms.gov.in');
 INSERT INTO employee_email VALUES (1001, 'ananya.r84@gmail.com');
@@ -82,6 +88,8 @@ INSERT INTO employee_email VALUES (1009, 'vikram.shetty@slms.gov.in');
 INSERT INTO employee_email VALUES (1010, 'sneha.k@slms.gov.in');
 INSERT INTO employee_email VALUES (1011, 'arjun.reddy@slms.gov.in');
 INSERT INTO employee_email VALUES (1012, 'meera.iyer@slms.gov.in');
+INSERT INTO employee_email VALUES (1013, 'nikhil.joshi@slms.gov.in');
+INSERT INTO employee_email VALUES (1014, 'farah.khan@slms.gov.in');
 INSERT INTO employee_phone VALUES (1001, '+919845012345');
 INSERT INTO employee_phone VALUES (1001, '08022213344');
 INSERT INTO employee_phone VALUES (1002, '+919880123456');
@@ -96,6 +104,8 @@ INSERT INTO employee_phone VALUES (1009, '+919343901234');
 INSERT INTO employee_phone VALUES (1010, '+918971012345');
 INSERT INTO employee_phone VALUES (1011, '+919986123450');
 INSERT INTO employee_phone VALUES (1012, '+917760234561');
+INSERT INTO employee_phone VALUES (1013, '+919845100013');
+INSERT INTO employee_phone VALUES (1014, '+919845100014');
 
 -- ---------- civilians: just the demo citizen (5001); other citizens sign up on the website ----------
 INSERT INTO civilian (first_name, middle_name, last_name, street, city, state, pincode, username) VALUES ('Rohan', NULL, 'Desai', '5th Cross, Koramangala 6th Block', 'Bengaluru', 'Karnataka', '560095', 'rohan.desai');

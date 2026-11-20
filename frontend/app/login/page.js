@@ -7,13 +7,16 @@ import { resetMetaCache } from '@/lib/meta';
 import AuthHero from '@/components/AuthHero';
 import { ErrorBox } from '@/components/ui';
 
+// Every seeded demo login, grouped by role (all use Password@123).
 const DEMO = [
-  { u: 'admin', who: 'Admin' },
-  { u: 'karthik.menon', who: 'Zone supervisor' },
-  { u: 'suresh.kumar', who: 'Technician' },
-  { u: 'vikram.shetty', who: 'Accountant' },
-  { u: 'rohan.desai', who: 'Citizen' },
-  { u: 'lumen', who: 'Contractor' },
+  { role: 'Admins', users: ['admin', 'nikhil.joshi'] },
+  { role: 'Zone supervisors', users: ['karthik.menon', 'priya.nair', 'rahul.gowda'] },
+  { role: 'Engineers', users: ['deepa.k', 'arjun.reddy'] },
+  { role: 'Technicians', users: ['suresh.kumar', 'm.irfan', 'lakshmi.hegde'] },
+  { role: 'Accountants', users: ['vikram.shetty', 'farah.khan'] },
+  { role: 'Support agents', users: ['sneha.k', 'meera.iyer'] },
+  { role: 'Contractors', users: ['lumen', 'brightpath', 'deccanpower', 'nammalights'] },
+  { role: 'Citizen', users: ['rohan.desai'] },
 ];
 
 function LoginForm() {
@@ -56,16 +59,23 @@ function LoginForm() {
         </div>
         <button className="btn btn-primary" style={{ height: 42 }} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
       </form>
-      <p className="muted" style={{ marginTop: 16 }}>New citizen? <Link href="/register">Create an account</Link> to report faulty lights.</p>
+      <p className="muted" style={{ marginTop: 16 }}>Don&apos;t have an account? <Link href="/register">Sign up</Link></p>
 
       <div className="card" style={{ marginTop: 24, padding: 14 }}>
         <div className="card-title" style={{ marginBottom: 4 }}>Demo accounts <span className="muted" style={{ fontWeight: 500 }}>password: Password@123</span></div>
-        <div className="demo-list">
-          {DEMO.map((d) => (
-            <button key={d.u} type="button" className="btn btn-sm" disabled={busy}
-              onClick={() => { setUsername(d.u); setPassword('Password@123'); submit(null, d.u, 'Password@123'); }}>
-              <span>{d.u}</span><small>{d.who}</small>
-            </button>
+        <div className="demo-groups">
+          {DEMO.map((g) => (
+            <div className="demo-group" key={g.role}>
+              <span className="demo-role">{g.role}</span>
+              <div className="demo-chips">
+                {g.users.map((u) => (
+                  <button key={u} type="button" className="btn btn-sm" disabled={busy} title={`Sign in as ${u}`}
+                    onClick={() => { setUsername(u); setPassword('Password@123'); submit(null, u, 'Password@123'); }}>
+                    {u}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
